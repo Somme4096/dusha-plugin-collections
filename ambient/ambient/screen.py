@@ -245,7 +245,7 @@ def distance(a: int, b: int) -> int:
     return (a ^ b).bit_count()
 
 
-# Describe, through an OpenAI-compatible chat endpoint from the proxy's provider presets.
+# Describe, through an OpenAI-compatible chat endpoint from the companion's providers.
 
 
 @dataclass
@@ -256,54 +256,36 @@ class Endpoint:
     timeout_seconds: float = 60
 
 
-def endpoint(screen: dict[str, Any], settings: Any) -> Endpoint:
-    from dusha.client.proxy import _render
-    from dusha.client.settings import load
-    from dusha.homes import CONFIG_FILE
+def endpoint(screen: dict[str, Any], providers: Any) -> Endpoint:
+    from dataclasses import replace
+
+    from dusha.providers import Provider
 
     model = screen.get("model")
     if not isinstance(model, str) or not model:
         raise ValueError("ambient option 'screen.model' is required to describe screens")
-    base, key, auth, headers, timeout = "", "", "bearer", {}, 60.0
     name = screen.get("provider")
-    if name:
-        if settings.home is None:
-            raise ValueError(
-                "ambient option 'screen.provider' needs a config home to read proxy.upstreams from"
-            )
-        # environ=False: only the values actually used get filled in below, so an overridden key needs no env.
-        upstreams = load(settings.home / CONFIG_FILE, environ=False).upstreams
-        if name not in upstreams:
-            raise ValueError(
-                f"ambient option 'screen.provider' names {name!r}, not in proxy.upstreams "
-                f"(have: {sorted(upstreams)})"
-            )
-        profile = upstreams[name]
-        base = profile.endpoints.get("chat", profile.base_url)
-        key, auth, headers, timeout = (
-            profile.key,
-            profile.auth,
-            dict(profile.headers),
-            profile.timeout_seconds,
-        )
-    base = str(screen.get("base_url") or base).rstrip("/")
-    if not base:
-        raise ValueError("ambient option 'screen' needs a 'provider' or a 'base_url'")
-    key = str(screen.get("key", key) or "")
-    auth = str(screen.get("auth", auth))
-    headers = {**headers, **(screen.get("headers") or {})}
     try:
-        rendered = {name: _render(value, "") for name, value in headers.items()}
-        key = _render(key, "") if key else ""
+        profile = providers.get(name) if name else Provider(base_url="", timeout_seconds=60)
     except KeyError as error:
-        raise ValueError(f"ambient screen provider needs the environment variable {error.args[0]}") from error
-    if key:
-        if auth == "x-api-key":
-            rendered["x-api-key"] = key
-        else:
-            rendered["authorization"] = f"Bearer {key}"
-    url = base if base.endswith("/chat/completions") else base + "/chat/completions"
-    return Endpoint(url, model, rendered, float(screen.get("timeout_seconds", timeout)))
+        raise ValueError(f"ambient option 'screen.provider': {error.args[0]}") from error
+    target = replace(
+        profile,
+        base_url=str(screen.get("base_url") or profile.url("chat")).rstrip("/"),
+        endpoints={},
+        key=str(screen.get("key", profile.key) or ""),
+        auth=str(screen.get("auth", profile.auth)),
+        headers={**profile.headers, **(screen.get("headers") or {})},
+    )
+    if not target.base_url:
+        raise ValueError("ambient option 'screen' needs a 'provider' or a 'base_url'")
+    try:
+        headers = target.request_headers()
+    except ValueError as error:
+        raise ValueError(f"ambient screen provider: {error}") from error
+    url = target.base_url
+    url = url if url.endswith("/chat/completions") else url + "/chat/completions"
+    return Endpoint(url, model, headers, float(screen.get("timeout_seconds", profile.timeout_seconds)))
 
 
 def parse(text: str) -> dict[str, str]:

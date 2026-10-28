@@ -33,7 +33,7 @@ Run it with `cd webui && bun install && bun server.ts`.
 2. Install `psutil` into dusha's environment for ambient's metrics: `uv tool install dusha --with psutil`.
 3. Start from [config.hub.example.json](config.hub.example.json) for the always-on machine and [config.device.example.json](config.device.example.json) for laptops and desktops.
 4. Optional sensors live in [ambient/hooks](ambient/hooks): a fish hook for failed and long commands, and a git `post-commit`.
-5. Screen descriptions: give ambient a `screen` section naming a vision model through one of your `proxy.upstreams` presets (see the device example). It needs Pillow, and `dbus-next` on Linux. To change the vision prompt, set `plugins.ambient.screen` in your prompts.json overlay (`prompts.path` in config.json), as a string or a list of lines.
+5. Screen descriptions: give ambient a `screen` section naming a vision model through one of your `providers` (see the device example). It needs Pillow, and `dbus-next` on Linux. To change the vision prompt, set `plugins.ambient.screen` in your prompts.json overlay (`prompts.path` in config.json), as a string or a list of lines.
 6. The proactive judge is `system_one`. Point it at your SystemOne server (see the hub example). It also answers dusha's `decide` hook, picking which emotion each user message moves. Without it, better_proactive picks by score and never raises screen moments.
 
 ## Develop

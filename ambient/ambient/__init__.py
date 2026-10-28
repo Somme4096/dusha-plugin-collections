@@ -198,10 +198,10 @@ class Store:
 class ScreenWatch:
     """Capture on a timer or on demand, describe what changed, and keep the last few images on this device."""
 
-    def __init__(self, ambient: Ambient, options: dict[str, Any], settings: Any):
+    def __init__(self, ambient: Ambient, options: dict[str, Any], providers: Any):
         self.ambient = ambient
         self.options = options
-        self.settings = settings
+        self.providers = providers
         self.prompt = _screen.prompt(getattr(ambient.ctx, "prompts", None))
         self.lock = threading.Lock()
         self.describer: _screen.Describer | None = None
@@ -220,7 +220,7 @@ class ScreenWatch:
 
     def _describer(self) -> _screen.Describer:
         if self.describer is None:
-            target = _screen.endpoint(self.options, self.settings)
+            target = _screen.endpoint(self.options, self.providers)
             self.describer = _screen.Describer(target, bool(self.options.get("json_mode", True)), self.prompt)
         return self.describer
 
@@ -278,7 +278,8 @@ class Ambient:
         if unknown:
             raise ValueError(f"unknown ambient redact option(s): {unknown}")
         self.redactor = Redactor(redact.get("patterns", ()), bool(redact.get("entropy", True)))
-        self.screen = ScreenWatch(self, options.screen, ctx.settings) if options.screen.get("model") else None
+        screen = options.screen
+        self.screen = ScreenWatch(self, screen, ctx.providers) if screen.get("model") else None
         self.outbox: deque[dict[str, Any]] = deque(maxlen=500)
         self.sample_outbox: deque[dict[str, Any]] = deque(maxlen=5000)
         self.net_before: tuple[float, float, float] | None = None

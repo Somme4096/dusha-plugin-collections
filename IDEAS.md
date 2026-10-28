@@ -211,7 +211,7 @@ Mostly tiny hooks that `curl` ambient, not plugins.
   - Skip it while presence says this device is `idle` or `locked`.
   - Downscale the image. Skip it if a perceptual hash says the screen hasn't changed since the last capture.
 - Describe it with a vision model through the proxy's provider presets:
-  - `screen.provider` names a `proxy.upstreams` profile from the same config.json. `{env:NAME}` placeholders are resolved the way the proxy does.
+  - `screen.provider` names a profile under `providers` in the same config.json. `{env:NAME}` placeholders are resolved the way the proxy does.
   - `screen.model` is required. `base_url`, `key`, and the other profile fields can be overridden.
   - OpenAI-compatible `chat/completions` with image content.
 - Each capture is sent along with the previous description, so the model can judge continuity. It returns JSON:

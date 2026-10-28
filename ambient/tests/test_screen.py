@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import json
-from types import SimpleNamespace
 
 import httpx
 from dusha.config import PromptsConfig
+from dusha.providers import Providers, parse
 
 from conftest import FakeCtx, Server, completion, free_port, load_plugin, make_config, wait_for
 
@@ -27,12 +27,9 @@ READING = {
 }
 
 
-def _home(tmp_path, vision_url: str):
-    home = tmp_path / "home"
-    home.mkdir()
-    upstream = {"base_url": vision_url + "/v1", "key": "{env:VISION_KEY}", "headers": {"x-trace": "dusha"}}
-    (home / "config.json").write_text(json.dumps({"proxy": {"upstreams": {"vlm": upstream}}}))
-    return home
+def _providers(vision_url: str):
+    vlm = {"base_url": vision_url + "/v1", "key": "{env:VISION_KEY}", "headers": {"x-trace": "dusha"}}
+    return Providers(parse({"vlm": vlm}, environ=False))
 
 
 def _watch(tmp_path, vision_url: str, command, prompts=None, **screen):
@@ -41,7 +38,7 @@ def _watch(tmp_path, vision_url: str, command, prompts=None, **screen):
     ctx.prompts = prompts
     ctx.data_dir = tmp_path / "data"
     ctx.data_dir.mkdir()
-    ctx.settings = SimpleNamespace(home=_home(tmp_path, vision_url))
+    ctx.providers = _providers(vision_url)
     options = {
         "provider": "vlm",
         "model": "tiny-vl",

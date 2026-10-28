@@ -52,12 +52,12 @@
     "server": {
       "url": "http://nas:8765",
       "token": "change-me-hub-token"
-    },
-    "upstreams": {
-      "vision": {
-        "base_url": "http://nas:8000/v1",
-        "key": "{env:VISION_API_KEY}"
-      }
+    }
+  },
+  "providers": {
+    "vision": {
+      "base_url": "http://nas:8000/v1",
+      "key": "{env:VISION_API_KEY}"
     }
   }
 }

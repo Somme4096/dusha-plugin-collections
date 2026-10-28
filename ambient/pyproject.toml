@@ -10,4 +10,4 @@ package = false
 
 [tool.dusha]
 entry = "ambient"
-inject = ["settings", "prompts", "api", "cli", "mcp"]
+inject = ["settings", "prompts", "providers", "api", "cli", "mcp"]
