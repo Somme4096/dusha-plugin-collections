@@ -15,6 +15,7 @@ See [IDEAS.md](IDEAS.md) for the design and every decision behind it.
 | [notification](notification) | Desktop (`notify-send`, `osascript`) and phone (ntfy). Picks the channel from presence. |
 | [ambient](ambient) | Events and metrics from every device in one place, system logs, commit histories, fish, screenshot, process monitoring, network interception, etc. The rest over MCP and Prometheus text. |
 | [better_proactive](better_proactive) | Drop-in replacement for the built-in proactive plugin, with reasons from any plugin instead of only silence. (And yes, `poll`,`ack` and `eval` in the original plugin was a bad idea. This will be merged into Dusha later) |
+| [system_one](system_one) | Asks a SystemOne server for quick decisions: which emotion a user message moves (`decide`), and whether better_proactive should speak up and how (`proactive.decide`). |
 
 ## WebUI
 
@@ -32,7 +33,7 @@ Run it with `cd webui && bun install && bun server.ts`.
 3. Start from [config.hub.example.json](config.hub.example.json) for the always-on machine and [config.device.example.json](config.device.example.json) for laptops and desktops.
 4. Optional sensors live in [ambient/hooks](ambient/hooks): a fish hook for failed and long commands, and a git `post-commit`.
 5. Screen descriptions: give ambient a `screen` section naming a vision model through one of your `proxy.upstreams` presets (see the device example). It needs Pillow, and `dbus-next` on Linux. To change the vision prompt, set `plugins.ambient.screen` in your prompts.json overlay (`prompts.path` in config.json), as a string or a list of lines.
-6. The proactive judge is dusha's own `examples/plugins/system_one`. Copy it into the same plugins directory and point it at your SystemOne server (see the hub example). Without it, better_proactive picks by score and never raises screen moments.
+6. The proactive judge is `system_one`. Point it at your SystemOne server (see the hub example). It also answers dusha's `decide` hook, picking which emotion each user message moves. Without it, better_proactive picks by score and never raises screen moments.
 
 ## Develop
 

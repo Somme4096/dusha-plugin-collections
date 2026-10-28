@@ -296,3 +296,8 @@ Mostly tiny hooks that `curl` ambient, not plugins.
 - The vision prompt lives at `plugins.ambient.screen` in dusha's prompts.json, as a string or a list of lines. The packaged prompt in `screen.py` is the default.
 - dusha core needed a change for this: its prompts.json rejected unknown slots. It now has an optional `plugins` slot, an object keyed by plugin name. Core checks only that each entry is an object, and each plugin checks its own keys. ambient injects `prompts` to read it.
 - A custom prompt should still ask for the same JSON keys. A `status` or `progress` outside the known values is dropped, and plain text falls back to the first lines.
+
+#### system_one moved here (2026-10-28)
+
+- system_one moved from dusha's `examples/plugins` into this collection as a plain copy, without its history. `proactive.decide` is this collection's event, so its answer now sits beside it.
+- Pointing `plugins_dir` at the collection loads it with everything else. dusha's own `decide` hook stays covered by `tests/test_external_plugins_e2e.py`.

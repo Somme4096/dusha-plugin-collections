@@ -14,9 +14,7 @@ from dusha import api
 from dusha.config import BUILTIN_CONFIGS, AppConfig, ExternalPluginConfig
 
 ROOT = Path(__file__).resolve().parent
-PLUGINS = ("presence", "notification", "relay", "ambient", "better_proactive")
-# The judge for better_proactive lives in dusha itself, as one of its example plugins.
-SYSTEM_ONE = ROOT.parent / "dusha" / "examples" / "plugins" / "system_one"
+PLUGINS = ("presence", "notification", "relay", "ambient", "better_proactive", "system_one")
 
 
 @pytest.fixture(scope="session")
@@ -25,12 +23,6 @@ def plugins_dir(tmp_path_factory: pytest.TempPathFactory) -> Path:
     for name in PLUGINS:
         shutil.copytree(
             ROOT / name, root / name, ignore=shutil.ignore_patterns(".venv", "__pycache__", "*.pyc", "tests")
-        )
-    if SYSTEM_ONE.is_dir():
-        shutil.copytree(
-            SYSTEM_ONE,
-            root / "system_one",
-            ignore=shutil.ignore_patterns(".venv", "__pycache__", "*.pyc", "tests"),
         )
     return root
 

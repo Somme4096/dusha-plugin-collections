@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 
-import { Moon, Search, Sun } from "./components/icons";
+import { Chevron, Moon, Search, Sun } from "./components/icons";
 import { StoreProvider, useStore } from "./store";
 import { Ambient } from "./views/Ambient";
 import { Console } from "./views/Console";
@@ -62,15 +62,47 @@ function useTheme(): [string, () => void] {
 }
 
 const PAGES = [
-  { page: "overview", label: "overview" },
-  { page: "plugins", label: "plugins" },
-  { page: "proactive", label: "proactive" },
-  { page: "presence", label: "presence" },
-  { page: "ambient", label: "ambient" },
-  { page: "console", label: "console" },
+  { page: "overview", label: "overview", short: "ov" },
+  { page: "plugins", label: "plugins", short: "pl" },
+  { page: "proactive", label: "proactive", short: "pr" },
+  { page: "presence", label: "presence", short: "pe" },
+  { page: "ambient", label: "ambient", short: "am" },
+  { page: "console", label: "console", short: "co" },
 ];
 
-function Rail({ route, theme, toggle, openPalette }: { route: Route; theme: string; toggle: () => void; openPalette: () => void }) {
+function useRail(): [boolean, () => void] {
+  const [collapsed, setCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem("dusha-rail") === "collapsed";
+    } catch {
+      return false;
+    }
+  });
+  const toggle = () =>
+    setCollapsed((was) => {
+      try {
+        localStorage.setItem("dusha-rail", was ? "open" : "collapsed");
+      } catch {}
+      return !was;
+    });
+  return [collapsed, toggle];
+}
+
+function Rail({
+  route,
+  theme,
+  toggle,
+  collapsed,
+  toggleRail,
+  openPalette,
+}: {
+  route: Route;
+  theme: string;
+  toggle: () => void;
+  collapsed: boolean;
+  toggleRail: () => void;
+  openPalette: () => void;
+}) {
   const store = useStore();
   const counts: Record<string, string> = {
     plugins: `${store.plugins.filter((p) => p.state === "active").length}/${store.plugins.length}`,
@@ -78,30 +110,46 @@ function Rail({ route, theme, toggle, openPalette }: { route: Route; theme: stri
   const name = store.health?.companion || store.meta?.companion;
   return (
     <aside class="rail">
-      <a class="brand" href="#/" style={{ textDecoration: "none" }}>
-        <span class="brand-mark" aria-hidden="true" />
-        <span>dusha</span>
-        {name && <span class="brand-name">{name}</span>}
-      </a>
+      <div class="rail-head">
+        <a class="brand" href="#/" title="dusha" style={{ textDecoration: "none" }}>
+          <span class="brand-mark" aria-hidden="true" />
+          <span class="rail-word">dusha</span>
+          {name && <span class="brand-name rail-word">{name}</span>}
+        </a>
+        <button
+          class="btn ghost rail-toggle"
+          onClick={toggleRail}
+          aria-label={collapsed ? "Expand the sidebar" : "Collapse the sidebar"}
+          aria-expanded={!collapsed}
+          title={collapsed ? "Expand the sidebar" : "Collapse the sidebar"}
+        >
+          <span class="rail-flip">
+            <Chevron size={12} />
+          </span>
+        </button>
+      </div>
       <nav class="nav" aria-label="Sections">
-        <span class="nav-label">companion</span>
-        {PAGES.map(({ page, label }) => (
-          <a key={page} href={`#/${page}`} aria-current={route.page === page ? "page" : undefined}>
-            <span>{label}</span>
+        <span class="nav-label rail-word">companion</span>
+        {PAGES.map(({ page, label, short }) => (
+          <a key={page} href={`#/${page}`} aria-label={label} aria-current={route.page === page ? "page" : undefined} title={label}>
+            <span class="rail-word">{label}</span>
+            <span class="rail-short" aria-hidden="true">
+              {short}
+            </span>
             {counts[page] && <span class="count">{counts[page]}</span>}
           </a>
         ))}
       </nav>
       <div class="rail-foot">
-        <button class="btn ghost" onClick={openPalette} aria-label="Open the command palette">
-          <Search size={12} /> jump <kbd>⌘K</kbd>
+        <button class="btn ghost" onClick={openPalette} aria-label="Open the command palette" title="Jump (⌘K)">
+          <Search size={12} /> <span class="rail-word">jump</span> <kbd class="rail-word">⌘K</kbd>
         </button>
-        <button class="btn ghost" onClick={toggle} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}>
-          {theme === "dark" ? <Sun size={12} /> : <Moon size={12} />} {theme === "dark" ? "light" : "dark"}
+        <button class="btn ghost" onClick={toggle} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`} title={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}>
+          {theme === "dark" ? <Sun size={12} /> : <Moon size={12} />} <span class="rail-word">{theme === "dark" ? "light" : "dark"}</span>
         </button>
         <span class="status server" title={store.meta?.server}>
           <span class={`dot ${store.online ? "ok live" : "bad"}`} />
-          {store.meta?.server.replace(/^https?:\/\//, "") ?? "…"}
+          <span class="rail-word">{store.meta?.server.replace(/^https?:\/\//, "") ?? "…"}</span>
         </span>
       </div>
     </aside>
@@ -241,6 +289,7 @@ function Shell() {
   const route = useRoute();
   const [theme, toggle] = useTheme();
   const [palette, setPalette] = useState(false);
+  const [railCollapsed, toggleRail] = useRail();
   const store = useStore();
 
   useEffect(() => {
@@ -260,8 +309,15 @@ function Shell() {
   }, [route.page, store.health, store.meta]);
 
   return (
-    <div class="shell">
-      <Rail route={route} theme={theme} toggle={toggle} openPalette={() => setPalette(true)} />
+    <div class={`shell${railCollapsed ? " rail-collapsed" : ""}`}>
+      <Rail
+        route={route}
+        theme={theme}
+        toggle={toggle}
+        collapsed={railCollapsed}
+        toggleRail={toggleRail}
+        openPalette={() => setPalette(true)}
+      />
       <main class="main">
         <Topbar route={route} />
         <Offline />

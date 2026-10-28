@@ -1,0 +1,56 @@
+# SystemOne external plugin
+
+This external plugin listens for `decide`. It calls a running [llama.cpp server](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md)
+with decision-model support (`POST /v1/systemone`) and returns the emotion the
+server picks. The external plugin contract is in the
+[Plugin API](https://github.com/Somme4096/dusha/blob/main/docs/guide.md#plugin-api).
+
+## Install
+
+```sh
+mkdir -p ~/.config/dusha/dusha/plugins
+cp -R system_one ~/.config/dusha/dusha/plugins/system_one
+```
+
+```json
+{
+  "plugins": {
+    "system_one": {
+      "options": {
+        "base_url": "http://127.0.0.1:8000",
+        "timeout_seconds": 10
+      }
+    }
+  }
+}
+```
+
+## Options
+
+| Option            | Required | Meaning                                                              |
+| ----------------- | -------- | -------------------------------------------------------------------- |
+| `base_url`        | yes      | SystemOne server root, for example `http://127.0.0.1:8000`.          |
+| `timeout_seconds` | no       | Finite positive HTTP request timeout, default `10`.                  |
+| `api_key`         | no       | Bearer token sent with every request.                                |
+| `model`           | no       | Checkpoint name. Omitted, the server picks.                          |
+| `allowed_ips`     | no       | Literal IPv4 or IPv6 addresses every request and redirect must use.  |
+
+The allowed choices are the keys of `request.emotions`. Each is sent with its
+`description` when present, otherwise a human-readable dimension name. Set
+`description` on a dimension in `emotions.json` to supply one.
+
+A cross-origin redirect drops the bearer token. An HTTPS to HTTP redirect is
+refused.
+
+## Proactive decisions
+
+The plugin also answers `proactive.decide`, a custom event the better_proactive plugin (from
+dusha-plugin-collections) fires before it queues a proactive message. The request carries a free-form `state` (a timeline of what she's doing, presence,
+affect, recent messages) and typed `choice` questions, usually `speak` (one candidate moment, or `none`) and
+`kind` (`talk` or `task`). They go to the same `/v1/systemone` server in one request, and every answer must
+be one of its question's `criteria`. Without this plugin, better_proactive picks by score.
+
+## Tests
+
+`tests/test_system_one_e2e.py` runs the external plugin against a local stand-in for the
+SystemOne server. `uv run pytest` from the project root collects it.

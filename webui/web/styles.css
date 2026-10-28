@@ -133,6 +133,7 @@ textarea {
   display: grid;
   grid-template-columns: var(--rail) minmax(0, 1fr);
   min-height: 100vh;
+  transition: grid-template-columns 220ms var(--ease);
 }
 
 .rail {
@@ -144,6 +145,19 @@ textarea {
   gap: 28px;
   padding: 24px 20px 20px 24px;
   border-right: 1px solid var(--rule);
+  transition: padding 220ms var(--ease);
+}
+
+.rail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: -4px -10px 0 0;
+}
+
+.rail-toggle {
+  flex: none;
 }
 
 .brand {
@@ -165,6 +179,92 @@ textarea {
 .brand-name {
   color: var(--fg-3);
   font-weight: 400;
+}
+
+.rail-flip {
+  display: inline-flex;
+  transform: rotate(180deg);
+  transition: transform 220ms var(--ease);
+}
+
+.rail-collapsed .rail-flip {
+  transform: none;
+}
+
+.rail-short {
+  display: none;
+}
+
+@media (min-width: 761px) {
+  .shell.rail-collapsed {
+    --rail: 56px;
+  }
+
+  .rail-collapsed .rail {
+    align-items: center;
+    gap: 24px;
+    padding: 24px 12px 20px;
+  }
+
+  .rail-collapsed .rail-head {
+    flex-direction: column;
+    justify-content: center;
+    gap: 14px;
+    margin: 0;
+  }
+
+  .rail-collapsed .brand {
+    gap: 0;
+  }
+
+  .rail-collapsed .rail-word,
+  .rail-collapsed .count,
+  .rail-collapsed .nav-label {
+    display: none;
+  }
+
+  .rail-collapsed .rail-short {
+    display: inline;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--fg-2);
+  }
+
+  .rail-collapsed .nav {
+    margin: 0;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .rail-collapsed .nav a {
+    justify-content: center;
+    align-items: center;
+    width: 32px;
+    height: 26px;
+    padding: 0;
+  }
+
+  .rail-collapsed .nav a[aria-current="page"]::before {
+    display: none;
+  }
+
+  .rail-collapsed .rail-foot {
+    align-items: center;
+    width: 100%;
+  }
+
+  .rail-collapsed .rail-foot .btn {
+    justify-content: center;
+    width: 32px;
+    padding: 0;
+  }
+
+  .rail-collapsed .rail-foot .server {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
 }
 
 @keyframes breathe {
@@ -1388,6 +1488,14 @@ select.input {
     padding: 14px 16px;
     border-right: 0;
     border-bottom: 1px solid var(--rule);
+  }
+
+  .rail-head {
+    display: contents;
+  }
+
+  .rail-toggle {
+    display: none;
   }
 
   .nav {
