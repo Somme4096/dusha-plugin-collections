@@ -1,10 +1,12 @@
 # dusha-plugin-collections
 
 > [!NOTE] 
-> 
+> This is a proof-of-concept repo. Use at your own risk.
 
 A small set of [dusha](https://github.com/Somme4096/dusha) plugins that shows what dusha is capable of, and I use daily.
 See [IDEAS.md](IDEAS.md) for the design and every decision behind it.
+
+## Included
 
 | Plugin | What it does |
 | --- | --- |
@@ -12,9 +14,16 @@ See [IDEAS.md](IDEAS.md) for the design and every decision behind it.
 | [relay](relay) | The hub's `look` and `notify` MCP tools for my other devices. Paired with presence. |
 | [notification](notification) | Desktop (`notify-send`, `osascript`) and phone (ntfy). Picks the channel from presence. |
 | [ambient](ambient) | Events and metrics from every device in one place, system logs, commit histories, fish, screenshot, process monitoring, network interception, etc. The rest over MCP and Prometheus text. |
-| [better_proactive](better_proactive) | Drop-in replacement for the built-in proactive plugin, with reasons from any plugin instead of only silence. |
+| [better_proactive](better_proactive) | Drop-in replacement for the built-in proactive plugin, with reasons from any plugin instead of only silence. (And yes, `poll`,`ack` and `eval` in the original plugin was a bad idea. This will be merged into Dusha later) |
 
-The [webui](webui) is a client. A browser view of any companion's plugins, commands, presence, ambient, and proactive pipeline, with WebGL visualizers. Run it with `cd webui && bun install && bun server.ts`.
+## WebUI
+
+The [webui](webui) is a small visualization to show you can integrate dusha everywhere. A browser view of any companion's plugins, commands, presence, ambient, and proactive pipeline, with WebGL visualizers for cool❤️
+
+Run it with `cd webui && bun install && bun server.ts`.
+
+<img width="6160" height="3432" alt="image" src="https://github.com/user-attachments/assets/49113949-bc11-48dd-bea8-d8e0cca70ce1" />
+
 
 ## Use
 
