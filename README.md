@@ -39,7 +39,7 @@ Run it with `cd webui && bun install && bun server.ts`.
 ## Develop
 
 ```sh
-uv sync              # dusha from ../dusha, plus psutil, pytest, ruff
+uv sync              # dusha 1.1.21+ from PyPI, plus psutil, pytest, ruff
 uv run pytest
 uv run ruff check .
 ```

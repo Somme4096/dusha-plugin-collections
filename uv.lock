@@ -72,7 +72,7 @@ wheels = [
 [[package]]
 name = "dusha"
 version = "1.1.21"
-source = { editable = "../dusha" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
     { name = "fastapi" },
@@ -80,19 +80,10 @@ dependencies = [
     { name = "questionary" },
     { name = "uvicorn" },
 ]
-
-[package.metadata]
-requires-dist = [
-    { name = "click", specifier = ">=8.1,<9" },
-    { name = "fastapi", specifier = ">=0.115,<1" },
-    { name = "httpx", specifier = ">=0.27,<1" },
-    { name = "pytest", marker = "extra == 'test'", specifier = ">=8,<10" },
-    { name = "pytest-asyncio", marker = "extra == 'test'", specifier = ">=0.24,<2" },
-    { name = "questionary", specifier = ">=2.1,<3" },
-    { name = "ruff", marker = "extra == 'test'", specifier = ">=0.8,<1" },
-    { name = "uvicorn", specifier = ">=0.30,<1" },
+sdist = { url = "https://files.pythonhosted.org/packages/57/40/9032196aa48cec035732e8403798b4e5186d471be221728a21fa35cf8db2/dusha-1.1.21.tar.gz", hash = "sha256:3b84bd151570b481e2778d5d12a11523da136610af9ec0d5dd872918f228d67f", size = 94384, upload-time = "2026-10-28T16:37:50.641Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d1/74/89783ba6ee58ce31412872b837404793e66f9fc826f45e466533bba24a2d/dusha-1.1.21-py3-none-any.whl", hash = "sha256:44277832eed386e7233c6ccb0415337a6ba4afcfccc85b82ceb80b15f4317368", size = 95522, upload-time = "2026-10-28T16:37:49.316Z" },
 ]
-provides-extras = ["test"]
 
 [[package]]
 name = "dusha-plugin-collections"
@@ -116,7 +107,7 @@ dev = [
 [package.metadata.requires-dev]
 dev = [
     { name = "dbus-next", marker = "sys_platform == 'linux'", specifier = ">=0.2.3" },
-    { name = "dusha", editable = "../dusha" },
+    { name = "dusha", specifier = ">=1.1.21" },
     { name = "pillow", specifier = ">=10" },
     { name = "psutil", specifier = ">=5.9" },
     { name = "pytest", specifier = ">=8,<10" },
