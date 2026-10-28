@@ -1,5 +1,5 @@
 // The dusha WebUI: another client next to `dusha`, so it finds its server the same way and talks only
-// to the public routes. The browser never sees the token; this process adds it on the way through.
+// to the public routes. The browser never sees the token, this process adds it on the way through.
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 
@@ -7,6 +7,7 @@ import index from "./web/index.html";
 import { BUILTINS, CORE_EVENTS } from "./lib/builtins";
 import { type Connection, connect } from "./lib/connection";
 import { scan } from "./lib/local";
+import { Operations } from "./lib/operations";
 
 const HELP = `Usage: bun server.ts [options]
 
@@ -51,6 +52,7 @@ try {
 }
 const pluginsDir = resolve(flags.plugins ?? resolve(import.meta.dir, ".."));
 const TIMEOUT_MS = 15_000;
+const operations = new Operations(200);
 
 async function forward(request: Request, path: string): Promise<Response> {
   const url = new URL(request.url);
@@ -58,19 +60,24 @@ async function forward(request: Request, path: string): Promise<Response> {
   const type = request.headers.get("content-type");
   if (type) headers.set("content-type", type);
   if (connection.token) headers.set("x-companion-token", connection.token);
+  const body = request.method === "GET" || request.method === "HEAD" ? undefined : await request.arrayBuffer();
+  const record = request.headers.get("x-webui-quiet") ? null : operations.start(request.method, path, body);
   try {
     const upstream = await fetch(`${connection.url}/${path}${url.search}`, {
       method: request.method,
       headers,
-      body: request.method === "GET" || request.method === "HEAD" ? undefined : await request.arrayBuffer(),
+      body,
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
-    return new Response(upstream.body, {
+    const text = await upstream.text();
+    record?.finish(upstream.status, text);
+    return new Response(text, {
       status: upstream.status,
       headers: { "content-type": upstream.headers.get("content-type") ?? "application/json" },
     });
   } catch (error) {
     const reason = (error as Error).name === "TimeoutError" ? "timed out" : "unreachable";
+    record?.finish(502, JSON.stringify({ detail: `${connection.url} is ${reason}` }));
     return Response.json({ detail: `${connection.url} is ${reason}` }, { status: 502 });
   }
 }
@@ -92,6 +99,7 @@ const server = Bun.serve({
         builtins: BUILTINS,
         coreEvents: CORE_EVENTS,
       }),
+    "/api/operations": () => Response.json({ operations: operations.list() }),
     "/api/dusha/*": (request) => forward(request, new URL(request.url).pathname.replace(/^\/api\/dusha\//, "")),
   },
   fetch: () => new Response("not found", { status: 404 }),

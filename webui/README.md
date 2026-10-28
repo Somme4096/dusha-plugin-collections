@@ -4,7 +4,7 @@ A browser client for one dusha companion, next to `dusha` the CLI. It finds its 
 
 | Page | Shows |
 | --- | --- |
-| overview | The soul field (16 affect dimensions as ridges of 3D bits), the plugin roster, mood, the wiring map, recent ambient events |
+| overview | The strongest affect dimensions as lanes of bits seen from above, a readout of messages, conversations, memory, devices, proactive, and operations, the latest messages, an activity timeline, and the wiring map |
 | plugins | Built-in plugins, the plugins in this repository (loaded or not), and anything else the server runs. Each one shows its wiring, holdings (memos, facts, affect), and every CLI command and MCP tool as a runnable form |
 | proactive | `proactive plan` every 3 seconds as a heat field over five stages, collect, gate, pick, queue, and deliver, with a pulse through the stages whenever the plan changes. `simulate` plays labeled synthetic plans, and `Evaluate now` runs one real pass |
 | presence | Every device in the registry with a strip of its recent states |
@@ -39,3 +39,4 @@ Then open http://127.0.0.1:8767.
 - For plugins in `--plugins`, the WebUI also reads `pyproject.toml` and the entry module: description, what the plugin emits (`ctx.emit`) and asks (`ctx.collect`), its routes, CLI groups, and MCP tools. That's how the wiring map draws both ends of an event.
 - Commands belong to the plugin whose CLI group they're in. `proactive` belongs to whichever plugin provides it, the built-in or better_proactive.
 - It never calls `proactive poll`, which would lease events away from real consumers.
+- Every command, tool call, and write sent through the WebUI lands in an in-memory operations log (`/api/operations`, last 200), which the overview's activity timeline reads next to ambient, memos, facts, and proactive sends. Background polls send `x-webui-quiet` and stay out of it.

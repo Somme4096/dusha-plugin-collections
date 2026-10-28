@@ -32,7 +32,7 @@ export function StoreProvider({ children }: { children: preact.ComponentChildren
 
   useEffect(() => {
     if (!status.data) return;
-    mcp<{ tools: Tool[] }>("tools/list").then((result) => setTools(result.tools), () => setTools([]));
+    mcp<{ tools: Tool[] }>("tools/list", {}, true).then((result) => setTools(result.tools), () => setTools([]));
   }, [Object.keys(status.data ?? {}).join(), manifest.at]);
 
   const store = useMemo<Store>(() => {

@@ -79,12 +79,26 @@ async function json<T>(response: Response): Promise<T> {
 
 export const get = <T>(path: string) => fetch(`/api/dusha/${path}`).then((r) => json<T>(r));
 
-export const post = <T>(path: string, body: unknown = {}) =>
+/** Quiet posts are reads the WebUI polls, so the operations log skips them. */
+export const post = <T>(path: string, body: unknown = {}, quiet = false) =>
   fetch(`/api/dusha/${path}`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", ...(quiet ? { "x-webui-quiet": "1" } : {}) },
     body: JSON.stringify(body),
   }).then((r) => json<T>(r));
+
+export type Operation = {
+  id: number;
+  at: number;
+  kind: "command" | "tool" | "write";
+  label: string;
+  args: string;
+  status: number;
+  ms: number;
+  error: string;
+};
+
+export const operations = () => fetch("/api/operations").then((r) => json<{ operations: Operation[] }>(r));
 
 export const meta = () => fetch("/api/meta").then((r) => json<Meta>(r));
 
@@ -93,13 +107,12 @@ export const run = (command: Command, values: Record<string, unknown>) =>
 
 let rpc = 0;
 
-export async function mcp<T>(method: string, params: Record<string, unknown> = {}): Promise<T> {
-  const reply = await post<{ result?: T; error?: { message: string } }>("mcp", {
-    jsonrpc: "2.0",
-    id: ++rpc,
-    method,
-    params,
-  });
+export async function mcp<T>(method: string, params: Record<string, unknown> = {}, quiet = false): Promise<T> {
+  const reply = await post<{ result?: T; error?: { message: string } }>(
+    "mcp",
+    { jsonrpc: "2.0", id: ++rpc, method, params },
+    quiet,
+  );
   if (reply.error) throw new Error(reply.error.message);
   return reply.result as T;
 }

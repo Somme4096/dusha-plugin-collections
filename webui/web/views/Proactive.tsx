@@ -106,7 +106,7 @@ export function Proactive({ initial }: { initial: string }) {
   const last = useRef("");
 
   const real = usePoll(
-    () => (planned ? post<Plan>("cli/v1/run/proactive/plan") : Promise.resolve(null)),
+    () => (planned ? post<Plan>("cli/v1/run/proactive/plan", {}, true) : Promise.resolve(null)),
     simulate ? 0 : 3_000,
     [planned, simulate],
   );
