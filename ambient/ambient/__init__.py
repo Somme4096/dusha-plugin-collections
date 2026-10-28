@@ -156,6 +156,8 @@ SCREEN_KEYS = {
     "change_threshold",
     "keep_images",
     "json_mode",
+    "max_tokens",
+    "extra_body",
     "backend",
     "command",
 }
@@ -220,8 +222,18 @@ class ScreenWatch:
 
     def _describer(self) -> _screen.Describer:
         if self.describer is None:
-            target = _screen.endpoint(self.options, self.providers)
-            self.describer = _screen.Describer(target, bool(self.options.get("json_mode", True)), self.prompt)
+            session = f"ambient-screen-{self.ambient.options.device}"
+            target = _screen.endpoint(self.options, self.providers, session)
+            extra_body = self.options.get("extra_body") or {}
+            if not isinstance(extra_body, dict):
+                raise ValueError("ambient option 'screen.extra_body' must be an object")
+            self.describer = _screen.Describer(
+                target,
+                bool(self.options.get("json_mode", True)),
+                self.prompt,
+                int(self.options.get("max_tokens", 1000)),
+                extra_body,
+            )
         return self.describer
 
     def tick(self) -> None:

@@ -256,7 +256,7 @@ class Endpoint:
     timeout_seconds: float = 60
 
 
-def endpoint(screen: dict[str, Any], providers: Any) -> Endpoint:
+def endpoint(screen: dict[str, Any], providers: Any, session: str = "ambient-screen") -> Endpoint:
     from dataclasses import replace
 
     from dusha.providers import Provider
@@ -280,7 +280,8 @@ def endpoint(screen: dict[str, Any], providers: Any) -> Endpoint:
     if not target.base_url:
         raise ValueError("ambient option 'screen' needs a 'provider' or a 'base_url'")
     try:
-        headers = target.request_headers()
+        # `session` fills {conversation_id}. Some providers (opencode-go) reject an empty one.
+        headers = target.request_headers(session)
     except ValueError as error:
         raise ValueError(f"ambient screen provider: {error}") from error
     url = target.base_url
@@ -311,10 +312,20 @@ def parse(text: str) -> dict[str, str]:
 
 
 class Describer:
-    def __init__(self, target: Endpoint, json_mode: bool = True, prompt: str = PROMPT):
+    def __init__(
+        self,
+        target: Endpoint,
+        json_mode: bool = True,
+        prompt: str = PROMPT,
+        max_tokens: int = 1000,
+        extra_body: dict[str, Any] | None = None,
+    ):
         self.target = target
         self.json_mode = json_mode
         self.prompt = prompt
+        self.max_tokens = max_tokens
+        # Provider-specific request fields, such as {"reasoning_effort": "none"} for a thinking model.
+        self.extra_body = dict(extra_body or {})
 
     def describe(self, jpeg: bytes, previous: dict[str, Any] | None, app_hint: str = "") -> dict[str, str]:
         context = [
@@ -335,8 +346,9 @@ class Describer:
                     ],
                 },
             ],
-            "max_tokens": 500,
+            "max_tokens": self.max_tokens,
             "temperature": 0.2,
+            **self.extra_body,
         }
         if self.json_mode:
             body["response_format"] = {"type": "json_object"}
@@ -349,9 +361,15 @@ class Describer:
         if response.status_code >= 400:
             raise ScreenError(f"vision model answered {response.status_code}: {response.text[:300]}")
         try:
-            text = response.json()["choices"][0]["message"]["content"]
+            choice = response.json()["choices"][0]
+            text = choice["message"]["content"]
         except (ValueError, KeyError, IndexError, TypeError) as error:
             raise ScreenError("vision model answered without a chat completion") from error
+        if not text and choice.get("finish_reason") == "length":
+            raise ScreenError(
+                f"the vision model used all {self.max_tokens} tokens before answering, likely on reasoning. "
+                "Raise screen.max_tokens, or turn reasoning off through screen.extra_body"
+            )
         result = parse(text if isinstance(text, str) else json.dumps(text))
         if app_hint:
             result["app"] = app_hint

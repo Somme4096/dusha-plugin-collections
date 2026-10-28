@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 
 import httpx
+import pytest
 from dusha.config import PromptsConfig
 from dusha.providers import Providers, parse
 
@@ -28,7 +29,8 @@ READING = {
 
 
 def _providers(vision_url: str):
-    vlm = {"base_url": vision_url + "/v1", "key": "{env:VISION_KEY}", "headers": {"x-trace": "dusha"}}
+    headers = {"x-trace": "dusha", "x-session": "{conversation_id}"}
+    vlm = {"base_url": vision_url + "/v1", "key": "{env:VISION_KEY}", "headers": headers}
     return Providers(parse({"vlm": vlm}, environ=False))
 
 
@@ -56,7 +58,7 @@ def test_screen_rows_record_changes_only(tmp_path, recorder, fake_screen, monkey
     replies = iter([completion(READING), completion(STUCK), completion(STUCK)])
     vision = recorder(reply=lambda body: next(replies))
     command, frame = fake_screen
-    ambient, _ = _watch(tmp_path, vision.url, command)
+    ambient, _ = _watch(tmp_path, vision.url, command, extra_body={"reasoning_effort": "none"})
     watch = ambient.screen
 
     first = watch.capture(force=False)
@@ -75,8 +77,10 @@ def test_screen_rows_record_changes_only(tmp_path, recorder, fake_screen, monkey
     assert request["path"] == "/v1/chat/completions"
     assert request["headers"]["authorization"] == "Bearer vk-123"
     assert request["headers"]["x-trace"] == "dusha"
+    assert request["headers"]["x-session"] == "ambient-screen-desktop"
     body = request["body"]
     assert body["model"] == "tiny-vl" and body["response_format"] == {"type": "json_object"}
+    assert body["max_tokens"] == 1000 and body["reasoning_effort"] == "none"  # extra_body is merged in
     text, image = body["messages"][1]["content"]
     assert '"activity": "reading docs"' in text["text"]  # the previous capture, for continuity
     assert image["image_url"]["url"].startswith("data:image/jpeg;base64,")
@@ -114,6 +118,15 @@ def test_plain_text_answers_and_servers_without_json_mode(tmp_path, recorder, fa
     assert "ghp_" not in row["text"] and "[redacted:github-token]" in row["text"]
     ambient.screen.capture(force=True)
     assert "response_format" not in vision.requests[-1]["body"]  # remembered
+
+
+def test_a_thinking_model_that_runs_out_of_tokens_says_so(tmp_path, recorder, fake_screen, monkeypatch):
+    monkeypatch.setenv("VISION_KEY", "vk-123")
+    out = {"choices": [{"finish_reason": "length", "message": {"content": "", "reasoning_content": "hmm"}}]}
+    vision = recorder(reply=out)
+    ambient, _ = _watch(tmp_path, vision.url, fake_screen[0], max_tokens=50)
+    with pytest.raises(Exception, match="all 50 tokens before answering"):
+        ambient.screen.capture(force=True)
 
 
 def test_hub_looks_at_a_device_screen_through_relay(tmp_path, plugins_dir, recorder, fake_screen):

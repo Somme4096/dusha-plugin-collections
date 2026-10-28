@@ -302,3 +302,11 @@ Mostly tiny hooks that `curl` ambient, not plugins.
 - system_one moved from dusha's `examples/plugins` into this collection as a plain copy, without its history. `proactive.decide` is this collection's event, so its answer now sits beside it.
 - Pointing `plugins_dir` at the collection loads it with everything else. dusha's own `decide` hook stays covered by `tests/test_external_plugins_e2e.py`.
 - everos_memory followed the same way, and dusha's `examples/` is gone. dusha's docs link here for working external plugins.
+
+#### First real runs (2026-10-29)
+
+- **Vision through opencode-go (`deepseek-v4.1-flash`):**
+  - It needs a non-empty `x-opencode-session`, so ambient fills `{conversation_id}` with `ambient-screen-<device>`.
+  - It's a thinking model: a real screen spent all 500 tokens reasoning and returned nothing. `screen.max_tokens` (default 1000) and `screen.extra_body` (merged into the request, such as `{"reasoning_effort": "none"}`) fix that, and an empty answer cut off by the token limit now says so.
+- **Vision through vlm (`minicpm-v-4.6`, llama.cpp on the NAS, 4096 context):** about 4s per capture, valid JSON, but the descriptions are generic, sometimes wrong (titles), and it echoes the prompt's example phrases.
+- **SystemOne (`LiquidAI/d1-3B` on the NAS):** `proactive.decide` through system_one answered `c1/task` when stuck for 25 minutes and `none` in deep focus, the same in four runs, in 2–4s.
