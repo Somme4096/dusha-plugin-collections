@@ -1,19 +1,20 @@
 # dusha-plugin-collections
 
-> [!NOTE]
-> A fun proof-of-concept, not a production application. Small [dusha](https://github.com/Somme4096/dusha) plugins that show off its plugin architecture and complement each other. See [IDEAS.md](IDEAS.md) for the design and every decision behind it.
+> [!NOTE] 
+> 
+
+A small set of [dusha](https://github.com/Somme4096/dusha) plugins that shows what dusha is capable of, and I use daily.
+See [IDEAS.md](IDEAS.md) for the design and every decision behind it.
 
 | Plugin | What it does |
 | --- | --- |
 | [presence](presence) | Is she active, idle, or locked, is each machine up, asleep, or gone. Devices send heartbeats to the hub, and the hub keeps the registry. |
+| [relay](relay) | The hub's `look` and `notify` MCP tools for my other devices. Paired with presence. |
 | [notification](notification) | Desktop (`notify-send`, `osascript`) and phone (ntfy). Picks the channel from presence. |
-| [relay](relay) | The hub's `look` and `notify` MCP tools for her other devices. Checks presence first, fails fast. |
-| [ambient](ambient) | Events and metrics from every device in one place, salient bits in context, the rest over MCP and Prometheus text. |
+| [ambient](ambient) | Events and metrics from every device in one place, system logs, commit histories, fish, screenshot, process monitoring, network interception, etc. The rest over MCP and Prometheus text. |
 | [better_proactive](better_proactive) | Drop-in replacement for the built-in proactive plugin, with reasons from any plugin instead of only silence. |
 
-The [webui](webui) is a client, not a plugin: a browser view of any companion's plugins, commands, presence, ambient, and proactive pipeline, with WebGL visualizers. Run it with `cd webui && bun install && bun server.ts`.
-
-Each plugin works alone. Together they talk only through dusha's plugin API (`collect`, `emit`, `on`), never imports.
+The [webui](webui) is a client. A browser view of any companion's plugins, commands, presence, ambient, and proactive pipeline, with WebGL visualizers. Run it with `cd webui && bun install && bun server.ts`.
 
 ## Use
 

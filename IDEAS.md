@@ -1,7 +1,7 @@
 # dusha-plugin-collections
 
-> [!NOTE]
-> A fun proof-of-concept project, not a production application. Small plugins that show off dusha's plugin architecture and complement each other. Meant to live in its own repository.
+> [!NOTE] Note to Claude
+> This is a fun proof-of-concept project so make it fun. 
 
 ## Ground rules
 
