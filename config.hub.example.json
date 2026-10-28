@@ -1,0 +1,60 @@
+{
+  "host": "0.0.0.0",
+  "port": 8765,
+  "timezone": "Asia/Taipei",
+  "api_token": "change-me-hub-token",
+  "plugins_dir": "/path/to/dusha-plugin-collections",
+  "plugins": {
+    "proactive": {
+      "disabled": true
+    },
+    "presence": {
+      "options": {
+        "device": "nas",
+        "interval_seconds": 30,
+        "welcome_after_minutes": 60
+      }
+    },
+    "notification": {
+      "options": {
+        "device": "nas",
+        "desktop": false,
+        "ntfy": {
+          "topic": "change-me-secret-topic"
+        }
+      }
+    },
+    "relay": {
+      "options": {
+        "token": "change-me-device-token"
+      }
+    },
+    "ambient": {
+      "options": {
+        "device": "nas",
+        "sample_seconds": 60,
+        "disks": [
+          "/",
+          "/mnt/data"
+        ]
+      }
+    },
+    "system_one": {
+      "options": {
+        "base_url": "http://127.0.0.1:8000"
+      }
+    },
+    "better_proactive": {
+      "options": {
+        "min_silence_minutes": 180,
+        "cooldown_minutes": 120,
+        "max_per_day": 4,
+        "max_unanswered": 2,
+        "quiet_start_hour": 1,
+        "quiet_end_hour": 8,
+        "min_gap_minutes": 10,
+        "target": "latest"
+      }
+    }
+  }
+}

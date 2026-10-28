@@ -1,0 +1,10 @@
+#!/bin/sh
+# What you just shipped, into ambient. Install with:
+#   cp post-commit .git/hooks/ && chmod +x .git/hooks/post-commit
+# or for every repo: git config --global core.hooksPath <dir holding this file>
+url=${DUSHA_URL:-http://127.0.0.1:8765}
+repo=$(basename "$(git rev-parse --show-toplevel)")
+text="committed \"$(git log -1 --pretty=%s)\" on $repo/$(git branch --show-current)"
+python3 -c 'import json, sys; print(json.dumps({"source": "git", "text": sys.argv[1][:300]}))' "$text" |
+    curl -s --max-time 2 -o /dev/null -X POST "$url/state/v1/ambient" \
+        -H 'content-type: application/json' -H "x-companion-token: ${DUSHA_TOKEN:-}" -d @- &

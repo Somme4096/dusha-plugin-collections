@@ -1,0 +1,13 @@
+[project]
+name = "dusha-better-proactive"
+version = "0.1.0"
+description = "Proactive messages with reasons from any plugin, a drop-in replacement for the built-in"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.uv]
+package = false
+
+[tool.dusha]
+entry = "better_proactive"
+inject = ["affect", "companion", "database", "messages", "settings", "prompts", "api", "cli"]

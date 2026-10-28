@@ -1,0 +1,671 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-28T08:17:11+08:00",
+  "title": "Design System: dusha WebUI",
+  "extensions": {
+    "colorMeta": {
+      "ultramarine": {
+        "role": "primary",
+        "displayName": "Ultramarine",
+        "tonalRamp": [
+          "oklch(15% 0.109 268)",
+          "oklch(25% 0.155 268)",
+          "oklch(35% 0.197 268)",
+          "oklch(45% 0.235 268)",
+          "oklch(58% 0.260 268)",
+          "oklch(70% 0.216 268)",
+          "oklch(82% 0.168 268)",
+          "oklch(95% 0.109 268)"
+        ]
+      },
+      "ultramarine-deep": {
+        "role": "primary",
+        "displayName": "Deep Ultramarine",
+        "tonalRamp": [
+          "oklch(15% 0.101 268)",
+          "oklch(25% 0.144 268)",
+          "oklch(35% 0.182 268)",
+          "oklch(45% 0.217 268)",
+          "oklch(58% 0.240 268)",
+          "oklch(70% 0.200 268)",
+          "oklch(82% 0.156 268)",
+          "oklch(95% 0.101 268)"
+        ]
+      },
+      "ultramarine-wash": {
+        "role": "primary",
+        "displayName": "Ultramarine Wash (8% alpha)",
+        "tonalRamp": [
+          "oklch(15% 0.109 268)",
+          "oklch(25% 0.155 268)",
+          "oklch(35% 0.197 268)",
+          "oklch(45% 0.235 268)",
+          "oklch(58% 0.260 268)",
+          "oklch(70% 0.216 268)",
+          "oklch(82% 0.168 268)",
+          "oklch(95% 0.109 268)"
+        ]
+      },
+      "on-accent": {
+        "role": "neutral",
+        "displayName": "On Accent",
+        "tonalRamp": [
+          "oklch(15% 0.000 0)",
+          "oklch(25% 0.000 0)",
+          "oklch(35% 0.000 0)",
+          "oklch(45% 0.000 0)",
+          "oklch(58% 0.000 0)",
+          "oklch(70% 0.000 0)",
+          "oklch(82% 0.000 0)",
+          "oklch(95% 0.000 0)"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "tonalRamp": [
+          "oklch(15% 0.001 100)",
+          "oklch(25% 0.002 100)",
+          "oklch(35% 0.002 100)",
+          "oklch(45% 0.003 100)",
+          "oklch(58% 0.003 100)",
+          "oklch(70% 0.002 100)",
+          "oklch(82% 0.002 100)",
+          "oklch(95% 0.001 100)"
+        ]
+      },
+      "paper-2": {
+        "role": "neutral",
+        "displayName": "Paper 2",
+        "tonalRamp": [
+          "oklch(15% 0.001 100)",
+          "oklch(25% 0.002 100)",
+          "oklch(35% 0.002 100)",
+          "oklch(45% 0.003 100)",
+          "oklch(58% 0.003 100)",
+          "oklch(70% 0.002 100)",
+          "oklch(82% 0.002 100)",
+          "oklch(95% 0.001 100)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "tonalRamp": [
+          "oklch(15% 0.003 270)",
+          "oklch(25% 0.005 270)",
+          "oklch(35% 0.006 270)",
+          "oklch(45% 0.007 270)",
+          "oklch(58% 0.008 270)",
+          "oklch(70% 0.006 270)",
+          "oklch(82% 0.005 270)",
+          "oklch(95% 0.003 270)"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Ink 2",
+        "tonalRamp": [
+          "oklch(15% 0.006 270)",
+          "oklch(25% 0.009 270)",
+          "oklch(35% 0.011 270)",
+          "oklch(45% 0.013 270)",
+          "oklch(58% 0.014 270)",
+          "oklch(70% 0.012 270)",
+          "oklch(82% 0.009 270)",
+          "oklch(95% 0.006 270)"
+        ]
+      },
+      "ink-3": {
+        "role": "neutral",
+        "displayName": "Ink 3",
+        "tonalRamp": [
+          "oklch(15% 0.006 270)",
+          "oklch(25% 0.009 270)",
+          "oklch(35% 0.011 270)",
+          "oklch(45% 0.013 270)",
+          "oklch(58% 0.014 270)",
+          "oklch(70% 0.012 270)",
+          "oklch(82% 0.009 270)",
+          "oklch(95% 0.006 270)"
+        ]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Rule",
+        "tonalRamp": [
+          "oklch(15% 0.002 100)",
+          "oklch(25% 0.003 100)",
+          "oklch(35% 0.004 100)",
+          "oklch(45% 0.004 100)",
+          "oklch(58% 0.005 100)",
+          "oklch(70% 0.004 100)",
+          "oklch(82% 0.003 100)",
+          "oklch(95% 0.002 100)"
+        ]
+      },
+      "rule-2": {
+        "role": "neutral",
+        "displayName": "Rule 2",
+        "tonalRamp": [
+          "oklch(15% 0.002 100)",
+          "oklch(25% 0.003 100)",
+          "oklch(35% 0.004 100)",
+          "oklch(45% 0.005 100)",
+          "oklch(58% 0.006 100)",
+          "oklch(70% 0.005 100)",
+          "oklch(82% 0.004 100)",
+          "oklch(95% 0.002 100)"
+        ]
+      },
+      "state-active": {
+        "role": "tertiary",
+        "displayName": "Active Green",
+        "tonalRamp": [
+          "oklch(15% 0.052 155)",
+          "oklch(25% 0.075 155)",
+          "oklch(35% 0.095 155)",
+          "oklch(45% 0.113 155)",
+          "oklch(58% 0.125 155)",
+          "oklch(70% 0.104 155)",
+          "oklch(82% 0.081 155)",
+          "oklch(95% 0.052 155)"
+        ]
+      },
+      "state-idle": {
+        "role": "tertiary",
+        "displayName": "Idle Amber",
+        "tonalRamp": [
+          "oklch(15% 0.052 75)",
+          "oklch(25% 0.075 75)",
+          "oklch(35% 0.095 75)",
+          "oklch(45% 0.113 75)",
+          "oklch(58% 0.125 75)",
+          "oklch(70% 0.104 75)",
+          "oklch(82% 0.081 75)",
+          "oklch(95% 0.052 75)"
+        ]
+      },
+      "state-failed": {
+        "role": "tertiary",
+        "displayName": "Failed Vermilion",
+        "tonalRamp": [
+          "oklch(15% 0.077 35)",
+          "oklch(25% 0.109 35)",
+          "oklch(35% 0.138 35)",
+          "oklch(45% 0.165 35)",
+          "oklch(58% 0.183 35)",
+          "oklch(70% 0.152 35)",
+          "oklch(82% 0.118 35)",
+          "oklch(95% 0.077 35)"
+        ]
+      },
+      "bit-low": {
+        "role": "neutral",
+        "displayName": "Bit Low",
+        "tonalRamp": [
+          "oklch(15% 0.002 100)",
+          "oklch(25% 0.003 100)",
+          "oklch(35% 0.004 100)",
+          "oklch(45% 0.004 100)",
+          "oklch(58% 0.005 100)",
+          "oklch(70% 0.004 100)",
+          "oklch(82% 0.003 100)",
+          "oklch(95% 0.002 100)"
+        ]
+      },
+      "bit-hot": {
+        "role": "tertiary",
+        "displayName": "Bit Hot Vermilion",
+        "tonalRamp": [
+          "oklch(15% 0.077 35)",
+          "oklch(25% 0.109 35)",
+          "oklch(35% 0.138 35)",
+          "oklch(45% 0.165 35)",
+          "oklch(58% 0.183 35)",
+          "oklch(70% 0.152 35)",
+          "oklch(82% 0.118 35)",
+          "oklch(95% 0.077 35)"
+        ]
+      },
+      "night-ultramarine": {
+        "role": "primary",
+        "displayName": "Night Ultramarine",
+        "tonalRamp": [
+          "oklch(15% 0.064 275)",
+          "oklch(25% 0.092 275)",
+          "oklch(35% 0.117 275)",
+          "oklch(45% 0.139 275)",
+          "oklch(58% 0.154 275)",
+          "oklch(70% 0.128 275)",
+          "oklch(82% 0.100 275)",
+          "oklch(95% 0.064 275)"
+        ]
+      },
+      "night-ultramarine-deep": {
+        "role": "primary",
+        "displayName": "Night Ultramarine Hover",
+        "tonalRamp": [
+          "oklch(15% 0.052 275)",
+          "oklch(25% 0.075 275)",
+          "oklch(35% 0.095 275)",
+          "oklch(45% 0.113 275)",
+          "oklch(58% 0.125 275)",
+          "oklch(70% 0.104 275)",
+          "oklch(82% 0.081 275)",
+          "oklch(95% 0.052 275)"
+        ]
+      },
+      "night": {
+        "role": "neutral",
+        "displayName": "Night",
+        "tonalRamp": [
+          "oklch(15% 0.002 265)",
+          "oklch(25% 0.003 265)",
+          "oklch(35% 0.004 265)",
+          "oklch(45% 0.004 265)",
+          "oklch(58% 0.005 265)",
+          "oklch(70% 0.004 265)",
+          "oklch(82% 0.003 265)",
+          "oklch(95% 0.002 265)"
+        ]
+      },
+      "night-2": {
+        "role": "neutral",
+        "displayName": "Night 2",
+        "tonalRamp": [
+          "oklch(15% 0.002 265)",
+          "oklch(25% 0.003 265)",
+          "oklch(35% 0.004 265)",
+          "oklch(45% 0.005 265)",
+          "oklch(58% 0.006 265)",
+          "oklch(70% 0.005 265)",
+          "oklch(82% 0.004 265)",
+          "oklch(95% 0.002 265)"
+        ]
+      },
+      "night-ink": {
+        "role": "neutral",
+        "displayName": "Night Ink",
+        "tonalRamp": [
+          "oklch(15% 0.001 100)",
+          "oklch(25% 0.002 100)",
+          "oklch(35% 0.002 100)",
+          "oklch(45% 0.003 100)",
+          "oklch(58% 0.003 100)",
+          "oklch(70% 0.002 100)",
+          "oklch(82% 0.002 100)",
+          "oklch(95% 0.001 100)"
+        ]
+      },
+      "night-ink-2": {
+        "role": "neutral",
+        "displayName": "Night Ink 2",
+        "tonalRamp": [
+          "oklch(15% 0.004 270)",
+          "oklch(25% 0.006 270)",
+          "oklch(35% 0.007 270)",
+          "oklch(45% 0.009 270)",
+          "oklch(58% 0.010 270)",
+          "oklch(70% 0.008 270)",
+          "oklch(82% 0.006 270)",
+          "oklch(95% 0.004 270)"
+        ]
+      },
+      "night-ink-3": {
+        "role": "neutral",
+        "displayName": "Night Ink 3",
+        "tonalRamp": [
+          "oklch(15% 0.006 270)",
+          "oklch(25% 0.009 270)",
+          "oklch(35% 0.011 270)",
+          "oklch(45% 0.013 270)",
+          "oklch(58% 0.014 270)",
+          "oklch(70% 0.012 270)",
+          "oklch(82% 0.009 270)",
+          "oklch(95% 0.006 270)"
+        ]
+      },
+      "night-rule": {
+        "role": "neutral",
+        "displayName": "Night Rule",
+        "tonalRamp": [
+          "oklch(15% 0.003 265)",
+          "oklch(25% 0.005 265)",
+          "oklch(35% 0.006 265)",
+          "oklch(45% 0.007 265)",
+          "oklch(58% 0.008 265)",
+          "oklch(70% 0.006 265)",
+          "oklch(82% 0.005 265)",
+          "oklch(95% 0.003 265)"
+        ]
+      },
+      "night-rule-2": {
+        "role": "neutral",
+        "displayName": "Night Rule 2",
+        "tonalRamp": [
+          "oklch(15% 0.005 265)",
+          "oklch(25% 0.007 265)",
+          "oklch(35% 0.009 265)",
+          "oklch(45% 0.010 265)",
+          "oklch(58% 0.012 265)",
+          "oklch(70% 0.010 265)",
+          "oklch(82% 0.007 265)",
+          "oklch(95% 0.005 265)"
+        ]
+      },
+      "night-state-active": {
+        "role": "tertiary",
+        "displayName": "Night Active Green",
+        "tonalRamp": [
+          "oklch(15% 0.056 155)",
+          "oklch(25% 0.081 155)",
+          "oklch(35% 0.102 155)",
+          "oklch(45% 0.122 155)",
+          "oklch(58% 0.135 155)",
+          "oklch(70% 0.112 155)",
+          "oklch(82% 0.087 155)",
+          "oklch(95% 0.056 155)"
+        ]
+      },
+      "night-state-idle": {
+        "role": "tertiary",
+        "displayName": "Night Idle Amber",
+        "tonalRamp": [
+          "oklch(15% 0.048 80)",
+          "oklch(25% 0.069 80)",
+          "oklch(35% 0.087 80)",
+          "oklch(45% 0.104 80)",
+          "oklch(58% 0.115 80)",
+          "oklch(70% 0.096 80)",
+          "oklch(82% 0.075 80)",
+          "oklch(95% 0.048 80)"
+        ]
+      },
+      "night-state-failed": {
+        "role": "tertiary",
+        "displayName": "Night Failed Vermilion (also dark Bit Hot)",
+        "tonalRamp": [
+          "oklch(15% 0.068 35)",
+          "oklch(25% 0.098 35)",
+          "oklch(35% 0.124 35)",
+          "oklch(45% 0.148 35)",
+          "oklch(58% 0.163 35)",
+          "oklch(70% 0.136 35)",
+          "oklch(82% 0.106 35)",
+          "oklch(95% 0.068 35)"
+        ]
+      },
+      "night-bit-low": {
+        "role": "neutral",
+        "displayName": "Night Bit Low",
+        "tonalRamp": [
+          "oklch(15% 0.004 265)",
+          "oklch(25% 0.006 265)",
+          "oklch(35% 0.007 265)",
+          "oklch(45% 0.009 265)",
+          "oklch(58% 0.010 265)",
+          "oklch(70% 0.008 265)",
+          "oklch(82% 0.006 265)",
+          "oklch(95% 0.004 265)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The companion's name over the overview field; once per page at most."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page titles and the plugin detail name."
+      },
+      "reading": {
+        "displayName": "Reading",
+        "purpose": "An instrument's live value, such as a pipeline stage reading."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Section heads sitting on a hairline rule."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "All running text, with tabular slashed-zero numerals."
+      },
+      "code": {
+        "displayName": "Code",
+        "purpose": "JSON results and wiring node names."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Lowercase table headers, asides, counts, tags, legends."
+      }
+    },
+    "shadows": [
+      {
+        "name": "suggest-drop",
+        "value": "0 8px 24px -12px rgb(0 0 0 / 0.25)",
+        "purpose": "Console autocomplete list, a floating layer."
+      },
+      {
+        "name": "palette-drop",
+        "value": "0 24px 64px -24px rgb(0 0 0 / 0.35)",
+        "purpose": "Command palette dialog, a floating layer."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Expo-out ease for every CSS state change."
+      },
+      {
+        "name": "state-fast",
+        "value": "120ms",
+        "purpose": "Table row hover."
+      },
+      {
+        "name": "state",
+        "value": "160ms",
+        "purpose": "Buttons, inputs, nav items, palette fade."
+      },
+      {
+        "name": "state-slow",
+        "value": "200-240ms",
+        "purpose": "Wiring focus, chevron rotation, pin label lighting, palette rise."
+      },
+      {
+        "name": "bit-fill",
+        "value": "400ms",
+        "purpose": "Bit row cells and stage backgrounds."
+      },
+      {
+        "name": "page-in",
+        "value": "420ms; translateY(6px) + blur(2px) to none",
+        "purpose": "Page entrance."
+      },
+      {
+        "name": "breathe",
+        "value": "opacity 1 to 0.35; 4.8s brand mark, 2.4s live dots",
+        "purpose": "The only looping CSS animation."
+      },
+      {
+        "name": "field-ease",
+        "value": "0.06-0.12 per 16.7ms frame",
+        "purpose": "Bit heights and tones easing toward targets."
+      },
+      {
+        "name": "field-sweep",
+        "value": "1400-2200ms, cubic-out, Gaussian band (sigma^2 = 3 columns)",
+        "purpose": "A pulse across the field's columns when an event lands."
+      },
+      {
+        "name": "field-sway",
+        "value": "sin(t * 0.11) x 0.04-0.08 rad yaw; pointer tilt 0.14 yaw / 0.06 pitch",
+        "purpose": "The field's ambient drift."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "all CSS animation and transition off; field eases instantly, no sway",
+        "purpose": "prefers-reduced-motion: reduce."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "stack",
+        "value": "1080px"
+      },
+      {
+        "name": "mobile",
+        "value": "760px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Button",
+      "kind": "button",
+      "refersTo": "button",
+      "description": "Default bordered action.",
+      "html": "<button class=\"ds-btn\">Open presence</button>",
+      "css": ".ds-btn { font-family: var(--font, \"Geist Mono Variable\", ui-monospace, monospace); font-size: 13px; display: inline-flex; align-items: center; gap: 8px; height: 28px; padding: 0 12px; border: 1px solid var(--rule-2); border-radius: var(--radius); background: var(--bg); color: var(--fg); cursor: pointer; transition: border-color 160ms var(--ease), background 160ms var(--ease); } .ds-btn:hover { border-color: var(--fg-3); background: var(--bg-2); } .ds-btn:active { transform: translateY(1px); } .ds-btn:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }"
+    },
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one Ultramarine action per form or toolbar.",
+      "html": "<button class=\"ds-btn-primary\">Run</button>",
+      "css": ".ds-btn-primary { font-family: var(--font, \"Geist Mono Variable\", ui-monospace, monospace); font-size: 13px; display: inline-flex; align-items: center; height: 28px; padding: 0 12px; border: 1px solid var(--accent); border-radius: var(--radius); background: var(--accent); color: var(--on-accent); cursor: pointer; transition: background 160ms var(--ease), border-color 160ms var(--ease); } .ds-btn-primary:hover { background: var(--accent-2); border-color: var(--accent-2); } .ds-btn-primary:active { transform: translateY(1px); } .ds-btn-primary:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; } .ds-btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Rail utilities such as jump and theme.",
+      "html": "<button class=\"ds-btn-ghost\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"square\" aria-hidden=\"true\"><rect x=\"2\" y=\"2\" width=\"9\" height=\"9\"/><path d=\"m11 11 3 3\"/></svg><span>jump</span><kbd class=\"ds-kbd\">⌘K</kbd></button>",
+      "css": ".ds-btn-ghost { font-family: var(--font, \"Geist Mono Variable\", ui-monospace, monospace); font-size: 13px; display: inline-flex; align-items: center; gap: 8px; height: 28px; padding: 0 6px; border: 1px solid transparent; border-radius: var(--radius); background: transparent; color: var(--fg-2); cursor: pointer; transition: background 160ms var(--ease), color 160ms var(--ease); } .ds-btn-ghost:hover { color: var(--fg); background: var(--bg-2); } .ds-btn-ghost:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; } .ds-kbd { font: inherit; font-size: 11px; color: var(--fg-3); padding: 0 4px; border: 1px solid var(--rule-2); border-radius: var(--radius); line-height: 16px; }"
+    },
+    {
+      "name": "Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Text field; focus shifts the border to Ultramarine.",
+      "html": "<input class=\"ds-input\" placeholder=\"str\" />",
+      "css": ".ds-input { font-family: var(--font, \"Geist Mono Variable\", ui-monospace, monospace); font-size: 13px; width: 240px; height: 30px; padding: 0 10px; border: 1px solid var(--rule-2); border-radius: var(--radius); background: var(--bg); color: var(--fg); outline: none; transition: border-color 160ms var(--ease); } .ds-input::placeholder { color: var(--fg-3); } .ds-input:focus { border-color: var(--accent); }"
+    },
+    {
+      "name": "Rail Navigation",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "Lowercase section names with counts; current place marked by a 4px Ultramarine square.",
+      "html": "<nav class=\"ds-nav\"><span class=\"ds-nav-label\">companion</span><a href=\"#\">overview</a><a href=\"#\" aria-current=\"page\">plugins<span class=\"ds-count\">10/11</span></a><a href=\"#\">proactive</a></nav>",
+      "css": ".ds-nav { font-family: var(--font, \"Geist Mono Variable\", ui-monospace, monospace); font-size: 13px; display: flex; flex-direction: column; width: 200px; padding-left: 14px; } .ds-nav-label { color: var(--fg-3); font-size: 11px; padding: 0 8px 6px; } .ds-nav a { position: relative; display: flex; justify-content: space-between; padding: 4px 8px; border-radius: var(--radius); color: var(--fg-2); text-decoration: none; transition: background 160ms var(--ease), color 160ms var(--ease); } .ds-nav a:hover { background: var(--bg-2); color: var(--fg); } .ds-nav a:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; } .ds-nav a[aria-current=\"page\"] { background: var(--bg-2); color: var(--fg); } .ds-nav a[aria-current=\"page\"]::before { content: \"\"; position: absolute; left: -14px; top: 12px; width: 4px; height: 4px; background: var(--accent); } .ds-count { color: var(--fg-3); font-size: 11px; }"
+    },
+    {
+      "name": "Tag",
+      "kind": "chip",
+      "refersTo": "tag",
+      "description": "Outlined 11px label; accent variant marks local origin.",
+      "html": "<span class=\"ds-tags\"><span class=\"ds-tag ds-tag-accent\">local</span><span class=\"ds-tag\">dusha-presence</span><span class=\"ds-tag ds-tag-synthetic\">synthetic data</span></span>",
+      "css": ".ds-tags { font-family: var(--font, \"Geist Mono Variable\", ui-monospace, monospace); font-size: 13px; display: flex; gap: 6px; } .ds-tag { display: inline-block; padding: 0 6px; border: 1px solid var(--rule-2); border-radius: var(--radius); color: var(--fg-2); font-size: 11px; line-height: 18px; white-space: nowrap; } .ds-tag-accent { border-color: color-mix(in srgb, var(--accent) 45%, transparent); color: var(--accent); } .ds-tag-synthetic { border-color: color-mix(in srgb, var(--warn) 50%, transparent); color: var(--warn); }"
+    },
+    {
+      "name": "Ruled Table",
+      "kind": "custom",
+      "refersTo": "table-row-selected",
+      "description": "The primary collection view: hairline rows, Paper 2 hover, Ultramarine Wash selection.",
+      "html": "<table class=\"ds-table\"><thead><tr><th>name</th><th>state</th><th class=\"ds-num\">cmds</th></tr></thead><tbody><tr class=\"ds-row\"><td>memory</td><td><span class=\"ds-dot\"></span> active</td><td class=\"ds-num\">4</td></tr><tr class=\"ds-row\" aria-selected=\"true\"><td>presence</td><td><span class=\"ds-dot\"></span> active</td><td class=\"ds-num\">2</td></tr><tr class=\"ds-row\"><td>proactive</td><td><span class=\"ds-dot ds-off\"></span> disabled</td><td class=\"ds-num\"></td></tr></tbody></table>",
+      "css": ".ds-table { font-family: var(--font, \"Geist Mono Variable\", ui-monospace, monospace); font-size: 13px; width: 420px; border-collapse: collapse; color: var(--fg); font-feature-settings: \"tnum\" 1, \"zero\" 1; } .ds-table th { text-align: left; font-weight: 400; font-size: 11px; color: var(--fg-3); padding: 10px 16px 8px 0; border-bottom: 1px solid var(--rule); } .ds-table th:first-child, .ds-table td:first-child { padding-left: 8px; } .ds-table td { padding: 9px 16px 9px 0; border-bottom: 1px solid var(--rule); } .ds-row { cursor: pointer; } .ds-row td { transition: background 120ms var(--ease); } .ds-row:hover td { background: var(--bg-2); } .ds-row[aria-selected=\"true\"] td { background: var(--accent-wash); } .ds-num { text-align: right; } .ds-dot { display: inline-block; width: 7px; height: 7px; background: var(--ok); margin-right: 4px; } .ds-dot.ds-off { background: transparent; box-shadow: inset 0 0 0 1px var(--fg-3); }"
+    },
+    {
+      "name": "Bit Row",
+      "kind": "custom",
+      "refersTo": "status-dot",
+      "description": "A value as a row of square bits, the 2D sibling of the WebGL field.",
+      "html": "<div class=\"ds-mood\"><span class=\"ds-name\">vitality</span><span class=\"ds-bits\"><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><span>0.50</span><span class=\"ds-name\">anxiety</span><span class=\"ds-bits\"><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i></i><i></i><i></i><i></i><i class=\"mark\"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><span>0.20</span></div>",
+      "css": ".ds-mood { font-family: var(--font, \"Geist Mono Variable\", ui-monospace, monospace); font-size: 13px; display: grid; grid-template-columns: 112px 260px 40px; gap: 4px 12px; align-items: center; color: var(--fg); font-feature-settings: \"tnum\" 1, \"zero\" 1; } .ds-name { color: var(--fg-2); } .ds-bits { display: grid; grid-template-columns: repeat(32, 1fr); gap: 2px; height: 9px; } .ds-bits i { background: var(--bit-low); transition: background 400ms var(--ease); } .ds-bits i.on { background: var(--accent); } .ds-bits i.mark { background: var(--fg-3); }"
+    },
+    {
+      "name": "Command Row",
+      "kind": "custom",
+      "refersTo": "button",
+      "description": "A CLI command as a disclosure row on a hairline.",
+      "html": "<details class=\"ds-cmd\"><summary><span>presence status</span><span class=\"ds-help\">Show every known device</span><span class=\"ds-chev\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"square\" aria-hidden=\"true\"><path d=\"M6 3.5 10.5 8 6 12.5\"/></svg></span></summary><div class=\"ds-cli\">dusha presence status</div></details>",
+      "css": ".ds-cmd { font-family: var(--font, \"Geist Mono Variable\", ui-monospace, monospace); font-size: 13px; width: 460px; border-bottom: 1px solid var(--rule); color: var(--fg); } .ds-cmd summary { display: grid; grid-template-columns: max-content minmax(0,1fr) auto; gap: 16px; align-items: baseline; padding: 8px 0; cursor: pointer; list-style: none; } .ds-cmd summary::-webkit-details-marker { display: none; } .ds-cmd summary:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; } .ds-help { color: var(--fg-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .ds-chev { color: var(--fg-3); transition: transform 200ms var(--ease); } .ds-cmd[open] .ds-chev { transform: rotate(90deg); } .ds-cli { color: var(--fg-3); font-size: 11px; padding: 4px 0 16px; }"
+    },
+    {
+      "name": "JSON Block",
+      "kind": "card",
+      "refersTo": "json-block",
+      "description": "Command results, colored by token kind.",
+      "html": "<pre class=\"ds-json\"><span class=\"p\">{\n  </span><span class=\"k\">\"state\"</span><span class=\"p\">: </span><span class=\"s\">\"active\"</span><span class=\"p\">,\n  </span><span class=\"k\">\"idle_s\"</span><span class=\"p\">: </span><span class=\"n\">42</span><span class=\"p\">,\n  </span><span class=\"k\">\"locked\"</span><span class=\"p\">: </span><span class=\"b\">false</span><span class=\"p\">,\n  </span><span class=\"k\">\"user\"</span><span class=\"p\">: </span><span class=\"z\">null</span><span class=\"p\">\n}</span></pre>",
+      "css": ".ds-json { font-family: var(--font, \"Geist Mono Variable\", ui-monospace, monospace); margin: 0; padding: 14px 16px; background: var(--bg-2); border-radius: var(--radius); font-size: 12px; line-height: 1.6; white-space: pre-wrap; } .ds-json .k { color: var(--fg); } .ds-json .s { color: var(--ok); } .ds-json .n { color: var(--accent); } .ds-json .b { color: var(--warn); } .ds-json .z, .ds-json .p { color: var(--fg-3); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Instrument Listing",
+    "overview": "The WebUI is a monospace document with live readings. Every surface reads like a source listing: one Geist Mono family at three weights, ruled with 1px hairlines, set on a near-white or near-black ground with nothing raised off it. Information sits in ruled tables, definition lists, and plain sentences. Labels are lowercase words, and no surface is a card.\n\nMotion belongs to one instrument. The WebGL bit field is a grid of square, instanced voxels whose heights are quantized into stacked steps, so a value reads as a count of bits, not as a smooth bar. It drifts slowly, tilts toward the pointer, fogs into the page ground, and lights a pulse that sweeps across its columns when something happens. Everything else on the page holds still apart from short state transitions. Inline, the same idea shrinks to the 2D bit row: a value as a line of square cells.\n\nDensity is high but calm. The body is 13px with tabular, slashed-zero numerals, and the hierarchy comes from size and tracking more than weight. One ultramarine accent carries the voice: it marks the current place, the lit stage, the required argument, the primary action, and the high bits. It never decorates.",
+    "keyCharacteristics": [
+      "One monospace family (Geist Mono) at 400, 500, and 600; tabular numerals with slashed zero everywhere.",
+      "Hairline 1px rules for all structure; no cards, no shadows on resting surfaces.",
+      "A single ultramarine accent, retuned per theme; muted state colors for active, idle, and failed.",
+      "Square geometry: bits, status dots, the brand mark, and wiring nodes are unrounded squares.",
+      "The WebGL bit field is the only ambient motion; it takes its colors live from the theme tokens.",
+      "Light and dark are equal: every token has a counterpart, and the system preference wins until toggled."
+    ],
+    "rules": [
+      {
+        "name": "The One Voice Rule",
+        "body": "Ultramarine is the only hue that isn't a state color. It marks place, action, or a lit reading, and is never used as decoration or as a background panel.",
+        "section": "colors"
+      },
+      {
+        "name": "The Paired Token Rule",
+        "body": "A color exists only as a pair of `:root` and `:root[data-theme=\"dark\"]` custom properties. Components and the WebGL field read the variables; neither hard-codes a hex.",
+        "section": "colors"
+      },
+      {
+        "name": "The Three Weights Rule",
+        "body": "Only 400, 500, and 600 exist. 600 is used once, for the brand word; headings use 500, and emphasis comes from ink tone, not bold.",
+        "section": "typography"
+      },
+      {
+        "name": "The Lowercase Label Rule",
+        "body": "Labels are plain lowercase words in Ink 3 at 11px. They name the thing beside them (a column, a stage, a field axis) and never sit above a heading as a tagline.",
+        "section": "typography"
+      },
+      {
+        "name": "The Floating-Only Shadow Rule",
+        "body": "A shadow means \"this layer floats over the page and will go away.\" Nothing that rests in the document flow gets one.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Fog-to-Ground Rule",
+        "body": "The field clears to `--bg` and fogs its far rows toward `--bg`, so the instrument has no visible backdrop of its own and seems to rise out of the page.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Square Bit Rule",
+        "body": "A bit is a square: in CSS, in the WebGL field, and in the favicon. Never round a bit, a dot, or a node.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do set every surface in Geist Mono at 400 or 500, at the ramp sizes above, with tabular and slashed-zero numerals.",
+      "Do structure with 1px hairlines (Rule for dividers, Rule 2 for control borders) and grids of shared rules.",
+      "Do show values as square bits: a bit row inline, the WebGL field for anything that moves over time.",
+      "Do pass every color through a paired custom property, so the WebGL field and both themes stay in step.",
+      "Do keep text over a field inside the field's clear rectangle, and label synthetic data with the Idle tag where it appears.",
+      "Do use the expo-out ease (`cubic-bezier(0.16, 1, 0.3, 1)`) at 120 to 240ms for state changes, and honor reduced motion."
+    ],
+    "donts": [
+      "Don't build KPI cards or sparkline tiles; a reading is a line of text or a row in a ruled table.",
+      "Don't put a shadow on anything that rests in the document flow; shadows are only for the suggestion list and the palette.",
+      "Don't round bits, status dots, wiring nodes, or the brand mark.",
+      "Don't add a second accent hue or use Ultramarine as a panel background beyond the selected-row wash.",
+      "Don't introduce another typeface, an uppercase letterspaced label, or a 700 weight.",
+      "Don't animate anything continuously except the field, the brand mark's breathing, and live status dots."
+    ]
+  }
+}

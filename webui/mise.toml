@@ -1,0 +1,14 @@
+[tools]
+bun = "1.4"
+
+[tasks.dev]
+description = "Run the WebUI with hot reload"
+run = "bun --hot server.ts"
+
+[tasks.start]
+description = "Run the WebUI"
+run = "bun server.ts"
+
+[tasks.check]
+description = "Type-check and test"
+run = ["bun x tsc --noEmit", "bun test"]

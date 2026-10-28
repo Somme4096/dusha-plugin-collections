@@ -1,0 +1,63 @@
+{
+  "host": "0.0.0.0",
+  "port": 8765,
+  "timezone": "Asia/Taipei",
+  "api_token": "change-me-device-token",
+  "plugins_dir": "/path/to/dusha-plugin-collections",
+  "plugins": {
+    "identity": {
+      "disabled": true
+    },
+    "memory": {
+      "disabled": true
+    },
+    "evergreen": {
+      "disabled": true
+    },
+    "memo": {
+      "disabled": true
+    },
+    "affect": {
+      "disabled": true
+    },
+    "proactive": {
+      "disabled": true
+    },
+    "presence": {
+      "options": {
+        "device": "macbook",
+        "report_to": "proxy",
+        "interval_seconds": 30
+      }
+    },
+    "notification": {
+      "options": {
+        "device": "macbook"
+      }
+    },
+    "ambient": {
+      "options": {
+        "device": "macbook",
+        "forward_to": "proxy",
+        "sample_seconds": 60,
+        "screen": {
+          "provider": "vision",
+          "model": "change-me-vision-model",
+          "every_seconds": 30
+        }
+      }
+    }
+  },
+  "proxy": {
+    "server": {
+      "url": "http://nas:8765",
+      "token": "change-me-hub-token"
+    },
+    "upstreams": {
+      "vision": {
+        "base_url": "http://nas:8000/v1",
+        "key": "{env:VISION_API_KEY}"
+      }
+    }
+  }
+}
