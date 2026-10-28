@@ -390,8 +390,8 @@ class BetterProactive(ProactiveEngine):
     def _payload(
         self, chosen: dict[str, Any], route: dict[str, Any], state: dict[str, Any], current: datetime
     ) -> dict[str, Any]:
-        framing = self.prompts["proactive_framing"]
-        spec = self.prompts["proactive_generation_instruction"]
+        framing = self.text["framing"]
+        spec = self.text["generation_instruction"]
         sent_today = self._sent_today(current)
         base = str(spec["base"])
         variant_index, variant = select_proactive_variant(spec, sent_today)
