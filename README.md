@@ -16,6 +16,7 @@ See [IDEAS.md](IDEAS.md) for the design and every decision behind it.
 | [ambient](ambient) | Events and metrics from every device in one place, system logs, commit histories, fish, screenshot, process monitoring, network interception, etc. The rest over MCP and Prometheus text. |
 | [better_proactive](better_proactive) | Drop-in replacement for the built-in proactive plugin, with reasons from any plugin instead of only silence. (And yes, `poll`,`ack` and `eval` in the original plugin was a bad idea. This will be merged into Dusha later) |
 | [system_one](system_one) | Asks a SystemOne server for quick decisions: which emotion a user message moves (`decide`), and whether better_proactive should speak up and how (`proactive.decide`). |
+| [everos_memory](everos_memory) | Mirrors conversations into an [EverOS](https://github.com/EverMind-AI/EverOS) sidecar, injects recalled episodes into the context, and moves affect through `decide`. |
 
 ## WebUI
 

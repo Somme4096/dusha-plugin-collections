@@ -15,7 +15,7 @@ package = false
 dusha = { path = "../dusha", editable = true }
 
 [tool.pytest.ini_options]
-testpaths = ["presence/tests", "notification/tests", "relay/tests", "ambient/tests", "better_proactive/tests", "system_one/tests"]
+testpaths = ["presence/tests", "notification/tests", "relay/tests", "ambient/tests", "better_proactive/tests", "system_one/tests", "everos_memory/tests"]
 asyncio_mode = "auto"
 
 [tool.ruff]

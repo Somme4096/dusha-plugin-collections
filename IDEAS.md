@@ -301,3 +301,4 @@ Mostly tiny hooks that `curl` ambient, not plugins.
 
 - system_one moved from dusha's `examples/plugins` into this collection as a plain copy, without its history. `proactive.decide` is this collection's event, so its answer now sits beside it.
 - Pointing `plugins_dir` at the collection loads it with everything else. dusha's own `decide` hook stays covered by `tests/test_external_plugins_e2e.py`.
+- everos_memory followed the same way, and dusha's `examples/` is gone. dusha's docs link here for working external plugins.
