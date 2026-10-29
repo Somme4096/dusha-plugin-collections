@@ -13,7 +13,7 @@ See [IDEAS.md](IDEAS.md) for the design and every decision behind it.
 | [presence](presence) | Is she active, idle, or locked, is each machine up, asleep, or gone. Devices send heartbeats to the hub, and the hub keeps the registry. |
 | [relay](relay) | The hub's `look` and `notify` MCP tools for my other devices. Paired with presence. |
 | [notification](notification) | Desktop (`notify-send`, `osascript`) and phone (ntfy). Picks the channel from presence. |
-| [ambient](ambient) | Events and metrics from every device in one place, system logs, commit histories, fish, screenshot, process monitoring, network interception, etc. The rest over MCP and Prometheus text. |
+| [ambient](ambient) | Events and metrics from every device in one place: system journal, containers, packages, files, browser history, DNS and connections, GPU, commit histories, fish, screenshot, process monitoring. The rest over MCP and Prometheus text. |
 | [better_proactive](better_proactive) | Drop-in replacement for the built-in proactive plugin, with reasons from any plugin instead of only silence. (And yes, `poll`,`ack` and `eval` in the original plugin was a bad idea. This will be merged into Dusha later) |
 | [system_one](system_one) | Asks a SystemOne server for quick decisions: which emotion a user message moves (`decide`), and whether better_proactive should speak up and how (`proactive.decide`). |
 | [everos_memory](everos_memory) | Mirrors conversations into an [EverOS](https://github.com/EverMind-AI/EverOS) sidecar, injects recalled episodes into the context, and moves affect through `decide`. |
@@ -30,7 +30,7 @@ Run it with `cd webui && bun install && bun server.ts`.
 ## Use
 
 1. Point `plugins_dir` in your `config.json` at this repository, or copy the plugin directories you want into your plugins directory.
-2. Install `psutil` into dusha's environment for ambient's metrics, plus `nvidia-ml-py` for NVIDIA GPUs: `uv tool install dusha --with psutil --with nvidia-ml-py`.
+2. Install ambient's optional readers into dusha's environment: `uv tool install dusha --with psutil --with nvidia-ml-py --with inotify_simple` on Linux, `--with psutil --with watchdog` on macOS.
 3. Start from [config.hub.example.json](config.hub.example.json) for the always-on machine and [config.device.example.json](config.device.example.json) for laptops and desktops.
 4. Optional sensors live in [ambient/hooks](ambient/hooks): a fish hook for failed and long commands, and a git `post-commit`.
 5. Screen descriptions: give ambient a `screen` section naming a vision model through one of your `providers` (see the device example). It needs Pillow, and `dbus-next` on Linux. For a thinking model, turn reasoning down with `extra_body`, such as `{"reasoning_effort": "minimal"}`, which is merged into each request, or raise `max_tokens` (default 1000). To change the vision prompt, set `plugins.ambient.screen` in your prompts.json overlay (`prompts.path` in config.json), as a string or a list of lines.
