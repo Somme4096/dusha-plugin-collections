@@ -40,7 +40,8 @@
         "journal": {
           "exclude_units": []
         },
-        "packages": {}
+        "packages": {},
+        "containers": {}
       }
     },
     "system_one": {

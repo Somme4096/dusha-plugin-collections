@@ -25,6 +25,7 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 
+from . import containers as _containers
 from . import gpu as _gpu
 from . import journal as _journal
 from . import packages as _packages
@@ -127,6 +128,7 @@ class Options:
     # Each of these sources is on when its key is present, even as `{}`.
     packages: dict[str, Any] | None = None
     journal: dict[str, Any] | None = None
+    containers: dict[str, Any] | None = None
 
 
 def peer(value: Any, settings: Any, label: str) -> Connection | None:
@@ -161,6 +163,7 @@ def parse_options(raw: dict[str, Any], settings: Any) -> Options:
 SOURCE_KEYS = {
     "packages": {"backends", "every_seconds"},
     "journal": _journal.KEYS,
+    "containers": _containers.KEYS,
 }
 
 SCREEN_KEYS = {
@@ -326,6 +329,16 @@ class Ambient:
             else:
                 logger.warning("ambient: the journal source needs journalctl, so it stays off")
         self.streams: list[Stream] = []
+        self.containers = None
+        if options.containers is not None:
+            self.containers = _containers.Containers(
+                options.containers,
+                lambda name, command, handle, **kw: self.follow(
+                    "container", command, handle, name=name, **kw
+                ),
+            )
+            if not self.containers.runtimes:
+                logger.warning("ambient: the containers source found neither podman nor docker")
         self.alert_lock = threading.RLock()
         if psutil is not None:
             psutil.cpu_percent(interval=None)  # the first reading is always 0, prime it
@@ -482,9 +495,12 @@ class Ambient:
         if self.journal is not None:
             journal = self.journal
             self.follow("journal", journal.command, journal.handle)
+        if self.containers is not None:
+            self.containers.start()
 
-    def follow(self, source: str, command: Any, handle: Any, **options: Any) -> Stream:
-        stream = Stream(source, command, lambda line: self.act(source, handle(line)), **options)
+    def follow(self, source: str, command: Any, handle: Any, name: str = "", **options: Any) -> Stream:
+        stream = Stream(name or source, command, lambda line: self.act(source, handle(line)), **options)
+        self.streams = [item for item in self.streams if item.thread.is_alive()]
         self.streams.append(stream.start())
         return stream
 
@@ -492,6 +508,8 @@ class Ambient:
         if self.journal is not None:
             self.act("journal", self.journal.flush(now))
             self.set_state("journal", self.journal.position)
+        if self.containers is not None:
+            self.act("container", self.containers.flush(now))
 
     def stop_streams(self) -> None:
         for stream in self.streams:
