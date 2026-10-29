@@ -54,7 +54,8 @@
             "zen:Somme4096": "personal",
             "chrome:Default": "work"
           }
-        }
+        },
+        "files": {}
       }
     }
   },

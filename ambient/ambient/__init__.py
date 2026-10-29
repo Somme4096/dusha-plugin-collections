@@ -27,6 +27,7 @@ from pydantic import BaseModel, Field
 
 from . import browser as _browser
 from . import containers as _containers
+from . import files as _files
 from . import gpu as _gpu
 from . import journal as _journal
 from . import packages as _packages
@@ -131,6 +132,7 @@ class Options:
     journal: dict[str, Any] | None = None
     containers: dict[str, Any] | None = None
     browser: dict[str, Any] | None = None
+    files: dict[str, Any] | None = None
 
 
 def peer(value: Any, settings: Any, label: str) -> Connection | None:
@@ -167,6 +169,7 @@ SOURCE_KEYS = {
     "journal": _journal.KEYS,
     "containers": _containers.KEYS,
     "browser": _browser.KEYS,
+    "files": _files.KEYS,
 }
 
 SCREEN_KEYS = {
@@ -343,6 +346,7 @@ class Ambient:
             if not self.containers.runtimes:
                 logger.warning("ambient: the containers source found neither podman nor docker")
         self.browser = _browser.Browser(options.browser) if options.browser is not None else None
+        self.files = _files.Files(options.files) if options.files is not None else None
         self.alert_lock = threading.RLock()
         if psutil is not None:
             psutil.cpu_percent(interval=None)  # the first reading is always 0, prime it
@@ -501,6 +505,8 @@ class Ambient:
             self.follow("journal", journal.command, journal.handle)
         if self.containers is not None:
             self.containers.start()
+        if self.files is not None:
+            self.files.start()
 
     def follow(self, source: str, command: Any, handle: Any, name: str = "", **options: Any) -> Stream:
         stream = Stream(name or source, command, lambda line: self.act(source, handle(line)), **options)
@@ -514,10 +520,14 @@ class Ambient:
             self.set_state("journal", self.journal.position)
         if self.containers is not None:
             self.act("container", self.containers.flush(now))
+        if self.files is not None:
+            self.act("files", self.files.flush(now))
 
     def stop_streams(self) -> None:
         for stream in self.streams:
             stream.stop()
+        if self.files is not None:
+            self.act("files", self.files.stop())
         self.flush_streams(time.time())
 
     def act(self, source: str, actions: list[Action]) -> None:
@@ -525,7 +535,11 @@ class Ambient:
             if action.kind == "log":
                 self.observe(
                     Observation(
-                        source=source, kind="log", text=action.text, data=action.data, created_at=action.at
+                        source=source,
+                        kind=action.row,
+                        text=action.text,
+                        data=action.data,
+                        created_at=action.at,
                     )
                 )
             elif action.kind == "alert":

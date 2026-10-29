@@ -22,6 +22,7 @@ class Action:
     key: Any = ""  # the alert key, or what repeats fold on
     data: dict[str, Any] = field(default_factory=dict)
     at: float | None = None
+    row: str = "log"  # the kind a `log` action is stored as
 
 
 def mask(text: str) -> str:
