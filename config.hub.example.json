@@ -41,7 +41,8 @@
           "exclude_units": []
         },
         "packages": {},
-        "containers": {}
+        "containers": {},
+        "network": {}
       }
     },
     "system_one": {

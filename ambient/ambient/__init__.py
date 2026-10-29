@@ -30,6 +30,7 @@ from . import containers as _containers
 from . import files as _files
 from . import gpu as _gpu
 from . import journal as _journal
+from . import network as _network
 from . import packages as _packages
 from . import screen as _screen
 from .redact import Redactor
@@ -74,6 +75,12 @@ CREATE TABLE IF NOT EXISTS rollups (
 CREATE TABLE IF NOT EXISTS state (
     key TEXT PRIMARY KEY,
     value_json TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS seen (
+    kind TEXT NOT NULL,
+    key TEXT NOT NULL,
+    last REAL NOT NULL,
+    PRIMARY KEY (kind, key)
 );
 """
 
@@ -133,6 +140,7 @@ class Options:
     containers: dict[str, Any] | None = None
     browser: dict[str, Any] | None = None
     files: dict[str, Any] | None = None
+    network: dict[str, Any] | None = None
 
 
 def peer(value: Any, settings: Any, label: str) -> Connection | None:
@@ -170,6 +178,7 @@ SOURCE_KEYS = {
     "containers": _containers.KEYS,
     "browser": _browser.KEYS,
     "files": _files.KEYS,
+    "network": _network.KEYS,
 }
 
 SCREEN_KEYS = {
@@ -347,6 +356,11 @@ class Ambient:
                 logger.warning("ambient: the containers source found neither podman nor docker")
         self.browser = _browser.Browser(options.browser) if options.browser is not None else None
         self.files = _files.Files(options.files) if options.files is not None else None
+        self.network = None
+        if options.network is not None:
+            since = self.get_state("network_since") or time.time()
+            self.set_state("network_since", since)
+            self.network = _network.Network(options.network, self.seen, since)
         self.alert_lock = threading.RLock()
         if psutil is not None:
             psutil.cpu_percent(interval=None)  # the first reading is always 0, prime it
@@ -371,6 +385,16 @@ class Ambient:
             "ON CONFLICT(key) DO UPDATE SET value_json=excluded.value_json",
             (key, json.dumps(value)),
         )
+
+    def seen(self, kind: str, key: str, now: float) -> float | None:
+        """When `key` was last seen before now, and remember now."""
+        rows = self.store.execute("SELECT last FROM seen WHERE kind=? AND key=?", (kind, key))
+        self.store.execute(
+            "INSERT INTO seen(kind, key, last) VALUES(?,?,?) "
+            "ON CONFLICT(kind, key) DO UPDATE SET last=excluded.last",
+            (kind, key, now),
+        )
+        return rows[0]["last"] if rows else None
 
     # Events.
 
@@ -490,6 +514,10 @@ class Ambient:
     def sample(self) -> None:
         now = time.time()
         values = self.read_local()
+        if self.network is not None:
+            extra, actions = self.network.sample(now)
+            values.update(extra)
+            self.act("network", actions)
         self.record(values, now)
         if values:
             self.check_alerts(values, now)
@@ -507,6 +535,8 @@ class Ambient:
             self.containers.start()
         if self.files is not None:
             self.files.start()
+        if self.network is not None:
+            self.network.start()
 
     def follow(self, source: str, command: Any, handle: Any, name: str = "", **options: Any) -> Stream:
         stream = Stream(name or source, command, lambda line: self.act(source, handle(line)), **options)
@@ -522,12 +552,16 @@ class Ambient:
             self.act("container", self.containers.flush(now))
         if self.files is not None:
             self.act("files", self.files.flush(now))
+        if self.network is not None:
+            self.act("network", self.network.flush(now))
 
     def stop_streams(self) -> None:
         for stream in self.streams:
             stream.stop()
         if self.files is not None:
             self.act("files", self.files.stop())
+        if self.network is not None:
+            self.act("network", self.network.stop())
         self.flush_streams(time.time())
 
     def act(self, source: str, actions: list[Action]) -> None:
@@ -897,7 +931,7 @@ class Ambient:
         events = [
             item
             for item in self.recent(hours=self.options.context_hours, limit=self.options.context_limit * 3)
-            if item["kind"] not in ("alert", "screen")
+            if item["kind"] not in ("alert", "screen", "network")
         ][: self.options.context_limit]
         screens = self.screen_rows(hours=self.options.context_hours, limit=6)
         if not alerts and not events and not screens:
