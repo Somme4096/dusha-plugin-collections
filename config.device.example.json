@@ -48,7 +48,13 @@
             "reasoning_effort": "minimal"
           }
         },
-        "packages": {}
+        "packages": {},
+        "browser": {
+          "profiles": {
+            "zen:Somme4096": "personal",
+            "chrome:Default": "work"
+          }
+        }
       }
     }
   },

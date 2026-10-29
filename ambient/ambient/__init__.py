@@ -25,6 +25,7 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 
+from . import browser as _browser
 from . import containers as _containers
 from . import gpu as _gpu
 from . import journal as _journal
@@ -129,6 +130,7 @@ class Options:
     packages: dict[str, Any] | None = None
     journal: dict[str, Any] | None = None
     containers: dict[str, Any] | None = None
+    browser: dict[str, Any] | None = None
 
 
 def peer(value: Any, settings: Any, label: str) -> Connection | None:
@@ -164,6 +166,7 @@ SOURCE_KEYS = {
     "packages": {"backends", "every_seconds"},
     "journal": _journal.KEYS,
     "containers": _containers.KEYS,
+    "browser": _browser.KEYS,
 }
 
 SCREEN_KEYS = {
@@ -339,6 +342,7 @@ class Ambient:
             )
             if not self.containers.runtimes:
                 logger.warning("ambient: the containers source found neither podman nor docker")
+        self.browser = _browser.Browser(options.browser) if options.browser is not None else None
         self.alert_lock = threading.RLock()
         if psutil is not None:
             psutil.cpu_percent(interval=None)  # the first reading is always 0, prime it
@@ -528,6 +532,12 @@ class Ambient:
                 self.open_alert(action.key, action.text, source, action.data, action.at)
             elif action.kind == "resolve":
                 self.resolve_alert(action.key, source, action.at)
+
+    def check_browser(self) -> None:
+        rows, state = self.browser.check(self.get_state("browser", {}), time.time())
+        self.set_state("browser", state)
+        for text, data in rows:
+            self.observe(Observation(source="browser", kind="browse", text=text, data=data))
 
     def check_packages(self) -> None:
         now = time.time()
@@ -912,6 +922,8 @@ def apply(ctx: Any, config: dict[str, Any]) -> None:
         ctx.on("screenshot.look", lambda body=None: watch.look())
     if ambient.packages is not None:
         ctx.interval(options.packages.get("every_seconds", 3 * 3600), ambient.check_packages)
+    if ambient.browser is not None:
+        ctx.interval(ambient.browser.every, ambient.check_browser)
     ambient.start_streams()
     ctx.on_dispose(ambient.store.close)
     ctx.on_dispose(ambient.gpus.close)
