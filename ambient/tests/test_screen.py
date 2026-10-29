@@ -3,11 +3,10 @@ from __future__ import annotations
 import json
 
 import httpx
-import pytest
 from dusha.config import PromptsConfig
 from dusha.providers import Providers, parse
 
-from conftest import FakeCtx, Server, completion, free_port, load_plugin, make_config, wait_for
+from conftest import FakeCtx, Server, client, completion, free_port, load_plugin, make_config, wait_for
 
 STUCK = {
     "app": "VS Code",
@@ -120,13 +119,18 @@ def test_plain_text_answers_and_servers_without_json_mode(tmp_path, recorder, fa
     assert "response_format" not in vision.requests[-1]["body"]  # remembered
 
 
-def test_a_thinking_model_that_runs_out_of_tokens_says_so(tmp_path, recorder, fake_screen, monkeypatch):
-    monkeypatch.setenv("VISION_KEY", "vk-123")
+async def test_a_thinking_model_that_runs_out_of_tokens_says_so(tmp_path, plugins_dir, recorder, fake_screen):
     out = {"choices": [{"finish_reason": "length", "message": {"content": "", "reasoning_content": "hmm"}}]}
     vision = recorder(reply=out)
-    ambient, _ = _watch(tmp_path, vision.url, fake_screen[0], max_tokens=50)
-    with pytest.raises(Exception, match="all 50 tokens before answering"):
-        ambient.screen.capture(force=True)
+    screen = {"base_url": vision.url, "model": "thinker", "backend": "command", "command": fake_screen[0]}
+    screen |= {"every_seconds": 3600, "max_tokens": 50, "extra_body": {"reasoning_effort": "minimal"}}
+    ambient = {"device": "desktop", "sample_seconds": 3600, "screen": screen}
+    config = make_config(tmp_path, plugins_dir, {"ambient": ambient})
+    async with client(config) as http:
+        response = await http.post("/state/v1/screenshot")
+    assert response.status_code == 503
+    assert "all 50 tokens before answering" in response.json()["detail"]
+    assert vision.requests[0]["body"]["reasoning_effort"] == "minimal"
 
 
 def test_hub_looks_at_a_device_screen_through_relay(tmp_path, plugins_dir, recorder, fake_screen):
