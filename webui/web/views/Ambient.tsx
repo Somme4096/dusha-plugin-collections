@@ -14,6 +14,7 @@ type Summary = { last: number; min: number; avg: number; max: number; n: number;
 type Metrics = Record<string, Record<string, Summary>>;
 
 const SHOWN = ["cpu.percent", "mem.percent", "swap.percent", "load.1", "net.rx_kbps", "net.tx_kbps", "battery.percent"];
+const GPU = /^gpu\.(util\.percent|mem\.percent|temp\.c):/;
 const BAND = 4;
 const ROWS = 24;
 const MAX_BANDS = 12;
@@ -22,7 +23,8 @@ const MAX_BANDS = 12;
 function level(name: string, value: number): number {
   if (name.startsWith("net.")) return Math.min(1, Math.log10(1 + Math.max(0, value)) / 5);
   if (name.startsWith("load.")) return Math.min(1, value / 8);
-  if (name.endsWith("percent") || name.startsWith("disk.percent")) return Math.min(1, Math.max(0, value / 100));
+  if (name.startsWith("gpu.temp.c")) return Math.min(1, Math.max(0, value / 100));
+  if (name.includes(".percent")) return Math.min(1, Math.max(0, value / 100));
   return Math.min(1, value);
 }
 
@@ -32,15 +34,19 @@ const NAMES: Record<string, string> = { "battery.plugged": "charger", "load.1": 
 function label(name: string): string {
   if (NAMES[name]) return NAMES[name];
   const [base = name, mount] = name.split(":");
-  const short = base.replace(".percent", " %").replace("net.", "").replace("_kbps", " kB/s");
+  const short = base
+    .replace("gpu.util", "gpu")
+    .replace("gpu.mem", "vram")
+    .replace("gpu.temp.c", "gpu °C")
+    .replace(".percent", " %").replace("net.", "").replace("_kbps", " kB/s");
   if (mount === undefined) return short;
   return `${short} ${mount === "~" ? "home" : mount === "/" ? "root" : mount.split("/").pop() || mount}`;
 }
 
-// ambient's own alert lines: cpu 85%, memory and disk 90%, battery 15%.
+// ambient's own alert lines: cpu 85%, memory and disk 90%, battery 15%, GPU 85°C.
 function hot(name: string, value: number): number {
   if (name === "battery.percent") return value <= 15 ? 1 : 0;
-  if (name === "cpu.percent") return value >= 85 ? 1 : 0;
+  if (name === "cpu.percent" || name.startsWith("gpu.temp.c")) return value >= 85 ? 1 : 0;
   if (name === "mem.percent" || name.startsWith("disk.percent")) return value >= 90 ? 1 : 0;
   return 0;
 }
@@ -49,7 +55,7 @@ function bands(metrics: Metrics | undefined): { device: string; name: string }[]
   const out: { device: string; name: string }[] = [];
   for (const [device, names] of Object.entries(metrics ?? {})) {
     for (const name of Object.keys(names).sort()) {
-      if (SHOWN.includes(name) || name.startsWith("disk.percent")) out.push({ device, name });
+      if (SHOWN.includes(name) || name.startsWith("disk.percent") || GPU.test(name)) out.push({ device, name });
     }
   }
   return out.slice(0, MAX_BANDS);
