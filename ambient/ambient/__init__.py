@@ -23,6 +23,7 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 
+from . import gpu as _gpu
 from . import screen as _screen
 from .redact import Redactor
 
@@ -94,6 +95,8 @@ class Alerts:
     mem_percent: float = 90
     disk_percent: float = 90
     battery_percent: float = 15
+    gpu_temp_c: float = 85
+    gpu_minutes: float = 3
 
 
 @dataclass
@@ -295,6 +298,7 @@ class Ambient:
         self.outbox: deque[dict[str, Any]] = deque(maxlen=500)
         self.sample_outbox: deque[dict[str, Any]] = deque(maxlen=5000)
         self.net_before: tuple[float, float, float] | None = None
+        self.gpus = _gpu.Gpus()
         if psutil is not None:
             psutil.cpu_percent(interval=None)  # the first reading is always 0, prime it
         # Alerts still open from before a restart, so they can resolve.
@@ -386,14 +390,13 @@ class Ambient:
         )
 
     def read_local(self) -> dict[str, float]:
+        values = self.gpus.read()
         if psutil is None:
-            return {}
-        values: dict[str, float] = {
-            "cpu.percent": psutil.cpu_percent(interval=None),
-            "mem.percent": psutil.virtual_memory().percent,
-            "swap.percent": psutil.swap_memory().percent,
-            "uptime.hours": round((time.time() - psutil.boot_time()) / 3600, 2),
-        }
+            return values
+        values["cpu.percent"] = psutil.cpu_percent(interval=None)
+        values["mem.percent"] = psutil.virtual_memory().percent
+        values["swap.percent"] = psutil.swap_memory().percent
+        values["uptime.hours"] = round((time.time() - psutil.boot_time()) / 3600, 2)
         if hasattr(os, "getloadavg"):
             values["load.1"] = os.getloadavg()[0]
         for path in self.options.disks:
@@ -508,12 +511,10 @@ class Ambient:
 
     def check_alerts(self, values: dict[str, float], now: float) -> None:
         limits = self.options.alerts
-        window = self.series(self.options.device, "cpu.percent", now - limits.cpu_minutes * 60)
-        covered = len(window) >= 3 and window[-1][0] - window[0][0] >= limits.cpu_minutes * 60 * 0.8
-        cpu_avg = sum(value for _, value in window) / len(window) if window else 0.0
+        cpu_avg = self._sustained("cpu.percent", limits.cpu_minutes, now)
         checks = {
             "cpu": (
-                covered and cpu_avg >= limits.cpu_percent,
+                cpu_avg is not None and cpu_avg >= limits.cpu_percent,
                 lambda: f"CPU pinned at {cpu_avg:.0f}% for {limits.cpu_minutes:g}+ min{self._top_process()}",
             ),
             "mem": (
@@ -532,6 +533,17 @@ class Ambient:
                 values.get(key, 0) >= limits.disk_percent,
                 lambda key=key, path=path: f"disk {path} at {values[key]:.0f}%",
             )
+        for key in values:
+            if key.startswith("gpu.temp.c:"):
+                index = int(key.rsplit(":", 1)[1])
+                temp = self._sustained(key, limits.gpu_minutes, now)
+                checks[f"gpu:{index}"] = (
+                    temp is not None and temp >= limits.gpu_temp_c,
+                    lambda index=index, temp=temp: (
+                        f"GPU {index} at {temp:.0f}°C for {limits.gpu_minutes:g}+ min"
+                        + self._top_gpu_process(index)
+                    ),
+                )
         for key, (firing, describe) in checks.items():
             if firing and key not in self.active_alerts:
                 text = describe()
@@ -557,6 +569,22 @@ class Ambient:
                         data={"alert_key": key},
                     )
                 )
+
+    def _sustained(self, name: str, minutes: float, now: float) -> float | None:
+        """The average over the last `minutes`, or None until samples cover most of that window."""
+        window = self.series(self.options.device, name, now - minutes * 60)
+        if len(window) < 3 or window[-1][0] - window[0][0] < minutes * 60 * 0.8:
+            return None
+        return sum(value for _, value in window) / len(window)
+
+    def _top_gpu_process(self, index: int) -> str:
+        pid = self.gpus.busiest(index)
+        if pid is None or psutil is None:
+            return ""
+        try:
+            return f", mostly `{psutil.Process(pid).name()}`"
+        except psutil.Error:
+            return ""
 
     def _top_process(self, by: str = "cpu") -> str:
         if psutil is None:
@@ -764,6 +792,7 @@ def apply(ctx: Any, config: dict[str, Any]) -> None:
         ctx.on("presence.capabilities", lambda: ["look"])
         ctx.on("screenshot.look", lambda body=None: watch.look())
     ctx.on_dispose(ambient.store.close)
+    ctx.on_dispose(ambient.gpus.close)
     _routes(ctx.api, ambient)
     _tools(ctx.mcp, ambient)
     _commands(ctx.cli, ambient)

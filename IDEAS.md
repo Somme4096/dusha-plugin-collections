@@ -366,3 +366,7 @@ Mostly tiny hooks that `curl` ambient, not plugins.
 - DNS from `resolvectl monitor --json=short`, folded per domain per window, with CDN and connectivity noise collapsed. A domain unseen for N days is an event.
 - `psutil.net_connections()` on each sample: which process talks to which hosts, and a newly listening port is an event.
 - macOS gets connection snapshots only.
+
+#### Made while building them
+
+- **gpu:** NVML segfaults if `nvmlShutdown` runs while a sample thread is inside it, so every call holds one lock. Metrics are named per index like disks (`gpu.temp.c:0`). dusha runs intervals at most once a second, so a sustained window needs at least 3 seconds to hold 3 samples.

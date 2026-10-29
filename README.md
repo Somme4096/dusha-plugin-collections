@@ -30,7 +30,7 @@ Run it with `cd webui && bun install && bun server.ts`.
 ## Use
 
 1. Point `plugins_dir` in your `config.json` at this repository, or copy the plugin directories you want into your plugins directory.
-2. Install `psutil` into dusha's environment for ambient's metrics: `uv tool install dusha --with psutil`.
+2. Install `psutil` into dusha's environment for ambient's metrics, plus `nvidia-ml-py` for NVIDIA GPUs: `uv tool install dusha --with psutil --with nvidia-ml-py`.
 3. Start from [config.hub.example.json](config.hub.example.json) for the always-on machine and [config.device.example.json](config.device.example.json) for laptops and desktops.
 4. Optional sensors live in [ambient/hooks](ambient/hooks): a fish hook for failed and long commands, and a git `post-commit`.
 5. Screen descriptions: give ambient a `screen` section naming a vision model through one of your `providers` (see the device example). It needs Pillow, and `dbus-next` on Linux. For a thinking model, turn reasoning down with `extra_body`, such as `{"reasoning_effort": "minimal"}`, which is merged into each request, or raise `max_tokens` (default 1000). To change the vision prompt, set `plugins.ambient.screen` in your prompts.json overlay (`prompts.path` in config.json), as a string or a list of lines.
