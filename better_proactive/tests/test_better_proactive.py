@@ -215,3 +215,50 @@ async def test_without_a_judge_screen_moments_are_never_raised(tmp_path, plugins
     screens = [item for item in plan["candidates"] if item["reason"].startswith("screen_")]
     assert len(screens) == 2
     assert plan["chosen"] is None
+
+
+async def test_a_turn_with_the_claim_marker_writes_the_message_without_counting_as_her(
+    tmp_path, plugins_dir, fake_desktop
+):
+    stack = _stack(fake_desktop, min_silence_minutes=0, thresholds={"longing": 0.0})
+    config = make_config(tmp_path / "data", plugins_dir, stack)
+    async with client(config) as http:
+        await _say(http)
+        await http.post("/state/v1/proactive/evaluate")
+        [event] = (await http.get("/state/v1/proactive/events", params={"consumer": "bot"})).json()["events"]
+        before = (await http.get("/state/v1/affect")).json()
+        assert event["claim_marker"] == f'<dusha_proactive event="{event["id"]}"/>'
+
+        turn = f"{event['claim_marker']}\n{event['generation_instruction']}"
+        stored = await http.post(
+            "/state/v1/messages",
+            json={"harness": "discord", "conversation_id": "dm", "role": "user", "content": turn},
+        )
+        assert stored.json().get("affect") is None
+        await http.post(
+            "/state/v1/messages",
+            json={"harness": "discord", "conversation_id": "dm", "role": "assistant", "content": "miss you"},
+        )
+        ack = await http.post(
+            f"/state/v1/proactive/events/{event['id']}/ack",
+            json={"consumer": "bot", "outcome": "sent", "text": "miss you"},
+        )
+        assert ack.status_code == 200, ack.text
+        after = (await http.get("/state/v1/affect")).json()
+        recent = (
+            await http.post(
+                "/state/v1/context", json={"query": "miss", "harness": "discord", "conversation_id": "dm"}
+            )
+        ).json()["records"]
+    assert after["last_user_message_at"] == before["last_user_message_at"]
+    assert after["unanswered_proactive"] == 1
+    texts = [item["text"] for item in recent if item.get("text") == "miss you"]
+    assert len(texts) == 1
+
+
+async def test_a_marker_for_an_event_nobody_leased_is_her_own_message(tmp_path, plugins_dir, fake_desktop):
+    config = make_config(tmp_path / "data", plugins_dir, _stack(fake_desktop))
+    async with client(config) as http:
+        await _say(http, '<dusha_proactive event="00000000-0000-0000-0000-000000000000"/> hi')
+        affect = (await http.get("/state/v1/affect")).json()
+    assert affect["last_user_message_at"] is not None

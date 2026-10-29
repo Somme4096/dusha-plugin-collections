@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import uuid
 from dataclasses import dataclass, fields
 from datetime import datetime
@@ -30,6 +31,7 @@ from dusha.timeutil import isoformat, parse_time, utc_now
 logger = logging.getLogger("dusha.better_proactive")
 
 KINDS = ("talk", "task")
+CLAIM = re.compile(r'<dusha_proactive event="([0-9a-f-]{36})"\s*/>')
 
 JUDGE_INSTRUCTIONS = (
     "You decide whether her companion should reach out to her right now, and about what. Read the timeline "
@@ -412,8 +414,10 @@ class BetterProactive(ProactiveEngine):
         )
         last_user = state["last_user_message_at"]
         silence = (current - parse_time(last_user)).total_seconds() / 60 if last_user else 0.0
+        event_id = str(uuid.uuid4())
         return {
-            "id": str(uuid.uuid4()),
+            "id": event_id,
+            "claim_marker": f'<dusha_proactive event="{event_id}"/>',
             "target": {
                 "harness": route["harness"],
                 "conversation_id": route["external_id"],
@@ -440,12 +444,34 @@ class BetterProactive(ProactiveEngine):
             "created_at": isoformat(current),
         }
 
+    def claim(self, offer: dict[str, Any]) -> dict[str, Any] | None:
+        """A consumer that writes the message through its own agent sends the marker as that agent's turn."""
+        match = CLAIM.search(offer["text"])
+        if not match:
+            return None
+        with self.database.connect() as db:
+            row = db.execute(
+                "SELECT payload_json FROM proactive_events WHERE id=? AND status='leased'", (match[1],)
+            ).fetchone()
+            if row is None:
+                return None
+            payload = {**json.loads(row["payload_json"]), "claimed": True}
+            db.execute(
+                "UPDATE proactive_events SET payload_json=? WHERE id=?", (compact_json(payload), match[1])
+            )
+        return {"event": match[1]}
+
     def acknowledge(self, event_id: str, consumer: str, outcome: str, **kwargs: Any) -> dict[str, Any]:
         with self.database.connect() as db:
             row = db.execute("SELECT payload_json FROM proactive_events WHERE id=?", (event_id,)).fetchone()
+        payload = json.loads(row["payload_json"]) if row is not None else {}
+        text = kwargs.get("text", "")
+        if payload.get("claimed"):
+            # The agent's reply is already archived with the claimed turn.
+            kwargs["text"] = ""
         result = super().acknowledge(event_id, consumer, outcome, **kwargs)
         if outcome == "sent" and row is not None:
-            self.ctx.emit("proactive.sent", kwargs.get("text", ""), json.loads(row["payload_json"]))
+            self.ctx.emit("proactive.sent", text, payload)
         return result
 
     def show_plan(self) -> dict[str, Any]:
@@ -465,6 +491,7 @@ def apply(ctx: Any, config: dict[str, Any]) -> None:
         )
         return
     ctx.on("message", engine.on_message)
+    ctx.on("claim", engine.claim)
     ctx.interval(max(5, proactive_config.poll_interval_seconds), engine.evaluate)
     _routes(ctx.api, engine)
     _commands(ctx.cli, engine)

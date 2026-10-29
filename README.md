@@ -14,7 +14,7 @@ See [IDEAS.md](IDEAS.md) for the design and every decision behind it.
 | [relay](relay) | The hub's `look` and `notify` MCP tools for my other devices. Paired with presence. |
 | [notification](notification) | Desktop (`notify-send`, `osascript`) and phone (ntfy). Picks the channel from presence. |
 | [ambient](ambient) | Events and metrics from every device in one place: system journal, containers, packages, files, browser history, DNS and connections, GPU, commit histories, fish, screenshot, process monitoring. The rest over MCP and Prometheus text. |
-| [better_proactive](better_proactive) | Drop-in replacement for the built-in proactive plugin, with reasons from any plugin instead of only silence. (And yes, `poll`,`ack` and `eval` in the original plugin was a bad idea. This will be merged into Dusha later) |
+| [better_proactive](better_proactive) | Drop-in replacement for the built-in proactive plugin, with reasons from any plugin instead of only silence. A consumer that writes the message through its own agent sends the event's `claim_marker` in that turn, so dusha stores it as an event, not as her message (needs dusha's `claim` hook). (And yes, `poll`,`ack` and `eval` in the original plugin was a bad idea. This will be merged into Dusha later) |
 | [system_one](system_one) | Asks a SystemOne server for quick decisions: which emotion a user message moves (`decide`), and whether better_proactive should speak up and how (`proactive.decide`). |
 | [everos_memory](everos_memory) | Mirrors conversations into an [EverOS](https://github.com/EverMind-AI/EverOS) sidecar, injects recalled episodes into the context, and moves affect through `decide`. |
 
