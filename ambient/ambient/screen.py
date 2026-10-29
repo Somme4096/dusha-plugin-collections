@@ -198,7 +198,7 @@ def capture(backend: str = "auto", command: list[str] | None = None) -> bytes:
                 return grab()
             except ScreenError as error:
                 errors.append(f"{name}: {error}")
-    raise ScreenError("no screenshot backend worked" + (": " + "; ".join(errors) if errors else ""))
+    raise ScreenError("no screenshot backend worked" + (": " + ". ".join(errors) if errors else ""))
 
 
 def frontmost_app() -> str:

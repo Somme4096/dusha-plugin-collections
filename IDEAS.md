@@ -262,7 +262,7 @@ Mostly tiny hooks that `curl` ambient, not plugins.
   - The entropy catch-all needs 24+ characters, all three of lower, upper, and digit, and entropy ≥ 3.8. Hex SHAs, UUIDs, snake_case identifiers, and paths never qualify.
   - The bare word `auth` is not a secret key, so `author: …` survives.
 - **Screen:**
-  - The portal call uses `interactive: false`. The handle path is computed up front and the signal match is registered before calling, so a fast reply isn't missed. The file the portal saves is deleted right after reading; GNOME puts it in `~/Pictures/Screenshots`.
+  - The portal call uses `interactive: false`. The handle path is computed up front and the signal match is registered before calling, so a fast reply isn't missed. The file the portal saves is deleted right after reading. GNOME puts it in `~/Pictures/Screenshots`.
   - Change detection is a 64-bit difference hash at a 4-bit threshold. Two captures of an idle screen differ by about 1 bit. A hash compares structure, not color.
   - The provider preset is loaded with `environ=False`, and only the values actually used get their `{env:…}` filled in. A missing variable gives a clear error, and an overridden key needs no variable.
   - `response_format: json_object` is sent first. A 400 means the server doesn't take it, so it's retried once without and remembered.
@@ -311,3 +311,4 @@ Mostly tiny hooks that `curl` ambient, not plugins.
 - **Vision through vlm (`minicpm-v-4.6`, llama.cpp on the NAS, 4096 context):** about 4s per capture, valid JSON, but the descriptions are generic, sometimes wrong (titles), and it echoes the prompt's example phrases.
 - **SystemOne (`LiquidAI/d1-3B` on the NAS):** `proactive.decide` through system_one answered `c1/task` when stuck for 25 minutes and `none` in deep focus, the same in four runs, in 2–4s.
 - **Vision through opencode-go (`muse-spark-1.3-contributor`):** cheapest on Go, but Meta trains on its prompts and completions, so screenshots become training data. It also needs "Allow paid endpoints that train on request data". It works on `chat/completions` although the docs list `responses`. With `extra_body: {"reasoning_effort": "minimal"}` a synthetic screen took 3.1s and was described accurately. `none` and `thinking` are rejected, and the default spends about 980 tokens reasoning.
+- **Muse on real screens:** three captures took 4–7s each, named every pane, quoted her messages, and tracked `communicating`, `waiting`, then `continued`. Images go out unredacted, so anything visible (an open config.json with keys) reaches Meta. Only the stored text is redacted.
