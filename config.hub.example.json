@@ -36,7 +36,11 @@
         "disks": [
           "/",
           "/mnt/data"
-        ]
+        ],
+        "journal": {
+          "exclude_units": []
+        },
+        "packages": {}
       }
     },
     "system_one": {

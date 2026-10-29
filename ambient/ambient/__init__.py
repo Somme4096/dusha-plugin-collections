@@ -5,8 +5,10 @@ from __future__ import annotations
 import json
 import logging
 import os
+import shutil
 import socket
 import sqlite3
+import sys
 import threading
 import time
 from collections import deque
@@ -24,9 +26,11 @@ from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 
 from . import gpu as _gpu
+from . import journal as _journal
 from . import packages as _packages
 from . import screen as _screen
 from .redact import Redactor
+from .streams import Action, Stream
 
 try:
     import psutil
@@ -122,6 +126,7 @@ class Options:
     screen: dict[str, Any] = field(default_factory=dict)
     # Each of these sources is on when its key is present, even as `{}`.
     packages: dict[str, Any] | None = None
+    journal: dict[str, Any] | None = None
 
 
 def peer(value: Any, settings: Any, label: str) -> Connection | None:
@@ -155,6 +160,7 @@ def parse_options(raw: dict[str, Any], settings: Any) -> Options:
 
 SOURCE_KEYS = {
     "packages": {"backends", "every_seconds"},
+    "journal": _journal.KEYS,
 }
 
 SCREEN_KEYS = {
@@ -313,6 +319,14 @@ class Ambient:
         self.packages = None
         if options.packages is not None:
             self.packages = _packages.Watch(_packages.detect(options.packages.get("backends")))
+        self.journal = None
+        if options.journal is not None:
+            if sys.platform == "linux" and shutil.which("journalctl"):
+                self.journal = _journal.Journal(options.journal, self.get_state("journal"))
+            else:
+                logger.warning("ambient: the journal source needs journalctl, so it stays off")
+        self.streams: list[Stream] = []
+        self.alert_lock = threading.RLock()
         if psutil is not None:
             psutil.cpu_percent(interval=None)  # the first reading is always 0, prime it
         # Alerts still open from before a restart, so they can resolve.
@@ -458,8 +472,44 @@ class Ambient:
         self.record(values, now)
         if values:
             self.check_alerts(values, now)
+        self.flush_streams(now)
         self.forward()
         self.maintain(now)
+
+    # Followed sources: each line becomes actions, folded repeats come out on the sample tick.
+
+    def start_streams(self) -> None:
+        if self.journal is not None:
+            journal = self.journal
+            self.follow("journal", journal.command, journal.handle)
+
+    def follow(self, source: str, command: Any, handle: Any, **options: Any) -> Stream:
+        stream = Stream(source, command, lambda line: self.act(source, handle(line)), **options)
+        self.streams.append(stream.start())
+        return stream
+
+    def flush_streams(self, now: float) -> None:
+        if self.journal is not None:
+            self.act("journal", self.journal.flush(now))
+            self.set_state("journal", self.journal.position)
+
+    def stop_streams(self) -> None:
+        for stream in self.streams:
+            stream.stop()
+        self.flush_streams(time.time())
+
+    def act(self, source: str, actions: list[Action]) -> None:
+        for action in actions:
+            if action.kind == "log":
+                self.observe(
+                    Observation(
+                        source=source, kind="log", text=action.text, data=action.data, created_at=action.at
+                    )
+                )
+            elif action.kind == "alert":
+                self.open_alert(action.key, action.text, source, action.data, action.at)
+            elif action.kind == "resolve":
+                self.resolve_alert(action.key, source, action.at)
 
     def check_packages(self) -> None:
         now = time.time()
@@ -587,33 +637,39 @@ class Ambient:
             elif not firing:
                 self.resolve_alert(key)
 
-    def open_alert(self, key: str, text: str, source: str = "ambient", data: dict | None = None) -> None:
-        if key in self.active_alerts:
-            return
-        result = self.observe(
-            Observation(
-                source=source,
-                kind="alert",
-                text=text,
-                ttl_seconds=7 * 24 * 3600,
-                data={**(data or {}), "alert_key": key},
+    def open_alert(
+        self, key: str, text: str, source: str = "ambient", data: dict | None = None, at: float | None = None
+    ) -> None:
+        with self.alert_lock:
+            if key in self.active_alerts:
+                return
+            result = self.observe(
+                Observation(
+                    source=source,
+                    kind="alert",
+                    text=text,
+                    ttl_seconds=7 * 24 * 3600,
+                    data={**(data or {}), "alert_key": key},
+                    created_at=at,
+                )
             )
-        )
-        self.active_alerts[key] = result["id"]
+            self.active_alerts[key] = result["id"]
         self.ctx.emit("ambient.alert", {"device": self.options.device, "text": text, "key": key})
 
-    def resolve_alert(self, key: str, source: str = "ambient") -> None:
-        if self.active_alerts.pop(key, None) is None:
-            return
-        self.observe(
-            Observation(
-                source=source,
-                kind="resolved",
-                text=f"{key} back to normal",
-                ttl_seconds=3600,
-                data={"alert_key": key},
+    def resolve_alert(self, key: str, source: str = "ambient", at: float | None = None) -> None:
+        with self.alert_lock:
+            if self.active_alerts.pop(key, None) is None:
+                return
+            self.observe(
+                Observation(
+                    source=source,
+                    kind="resolved",
+                    text=f"{key} back to normal",
+                    ttl_seconds=3600,
+                    data={"alert_key": key},
+                    created_at=at,
+                )
             )
-        )
 
     def _sustained(self, name: str, minutes: float, now: float) -> float | None:
         """The average over the last `minutes`, or None until samples cover most of that window."""
@@ -838,8 +894,11 @@ def apply(ctx: Any, config: dict[str, Any]) -> None:
         ctx.on("screenshot.look", lambda body=None: watch.look())
     if ambient.packages is not None:
         ctx.interval(options.packages.get("every_seconds", 3 * 3600), ambient.check_packages)
+    ambient.start_streams()
     ctx.on_dispose(ambient.store.close)
     ctx.on_dispose(ambient.gpus.close)
+    # Disposed in reverse, so streams save their position before the store closes.
+    ctx.on_dispose(ambient.stop_streams)
     _routes(ctx.api, ambient)
     _tools(ctx.mcp, ambient)
     _commands(ctx.cli, ambient)
