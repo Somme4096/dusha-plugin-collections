@@ -370,3 +370,10 @@ Mostly tiny hooks that `curl` ambient, not plugins.
 #### Made while building them
 
 - **gpu:** NVML segfaults if `nvmlShutdown` runs while a sample thread is inside it, so every call holds one lock. Metrics are named per index like disks (`gpu.temp.c:0`). dusha runs intervals at most once a second, so a sustained window needs at least 3 seconds to hold 3 samples.
+- **Opt-in:** `packages`, `journal`, `containers`, and `browser` are on only when their key is present, even as `{}`, so the hub and tests don't start readers they don't need.
+- **Shared pieces:** a small `state` table keeps each source's position (journal cursor, browser times, package state). `streams.py` holds the command runner, folding, and `Action`. `open_alert` and `resolve_alert` serve every source.
+- **Folding:** a line that keeps repeating doubles its window up to a day, so `systemd-logind` failing every minute costs about one row per window, not two an hour. On this desktop a day of journal comes down to about 20 rows.
+- **journal:** a simple service logs "Started" before it fails, so a resolve waits `settle_seconds` (60) and a new failure cancels it. Transient units (`dbus-:…`, `app-…`, scopes) only log, an alert on them could never resolve. The test drives real `logger` and `systemd-run --user` units.
+- **containers:** this podman sends no `stop` event before `died`, so exits 0, 130, 137, and 143 count as stops, and only an `oom` event makes a 137 a crash. Toolbox and distrobox containers are skipped by label. A removed container keeps its alerts until one with the same name stays up for `settle_seconds` (120). Logs follow `logs --follow --tail 0` on stderr only, capped at `lines_per_minute` (20).
+- **browser:** only visits are read, never URLs stored. Firefox keeps new visits in the WAL, so the copy takes `-wal` too. Firefox and Chromium are discovered as well as Zen and Chrome. `paths` overrides discovery.
+- **packages:** `bootc status` needs root, so the OS image goes through `rpm-ostree status --json`. How long a reboot has been pending is counted from when ambient first saw it.
