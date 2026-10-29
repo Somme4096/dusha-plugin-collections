@@ -43,7 +43,12 @@ async def _until(http, token: str, count: int, kind: str = "", timeout: float = 
 async def test_journal_errors_fold_failed_units_alert_and_the_cursor_resumes(tmp_path, plugins_dir):
     token = f"dusha-test-{os.getpid()}-{int(time.time())}"
     unit = f"{token}.service"
-    journal = {"resume_hours": 0.002, "settle_seconds": 1, "exclude_patterns": ["ignore-me"]}
+    journal = {
+        "resume_hours": 0.002,
+        "settle_seconds": 1,
+        "exclude_patterns": ["ignore-me"],
+        "exclude_units": [],
+    }
     options = {"device": "desktop", "sample_seconds": 1, "journal": journal}
     config = make_config(tmp_path / "data", plugins_dir, {"ambient": options})
     async with client(config) as http:

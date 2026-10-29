@@ -123,6 +123,8 @@ class Browser:
         self.paths = options.get("paths")
 
     def excluded(self, host: str) -> bool:
+        if host == "localhost" or host.startswith("127.") or host in ("[::1]", "::1"):
+            return True  # local dev servers and dusha's own webui are not reading
         return any(host == domain or host.endswith("." + domain) for domain in self.exclude)
 
     def check(self, before: dict[str, float], now: float) -> tuple[list[tuple[str, dict[str, Any]]], dict]:

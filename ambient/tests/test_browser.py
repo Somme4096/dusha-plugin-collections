@@ -82,6 +82,7 @@ async def test_browser_visits_are_grouped_per_label_without_queries(tmp_path, pl
         _visit_zen(zen, "https://arxiv.org/abs/2601.00002", "Another Paper")
         _visit_zen(zen, "https://ads.example/frame", "an embed", visit_type=4)
         _visit_zen(zen, "https://bank.example/account", "Balance")
+        _visit_zen(zen, "http://127.0.0.1:5173/ambient", "ambient · sophia · dusha")
         _visit_chrome(
             chrome, "https://github.com/acme/api/pull/41?diff=split", "Fix retries by acme · PR #41"
         )

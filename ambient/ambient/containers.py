@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import fnmatch
 import json
 import shutil
 import subprocess
@@ -11,7 +12,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
-from .streams import Action, Folder, mask
+from .streams import TESTS, Action, Folder, mask
 
 KEYS = {"runtimes", "exclude", "logs", "fold_minutes", "lines_per_minute", "settle_seconds"}
 # How a stopped container exits: SIGINT, SIGKILL, SIGTERM. Podman sends no stop event before it dies.
@@ -60,7 +61,8 @@ class Containers:
     def __init__(self, options: dict[str, Any], follow: Callable[..., Any]):
         wanted = options.get("runtimes") or ["podman", "docker"]
         self.runtimes = [runtime for runtime in wanted if shutil.which(runtime)]
-        self.exclude = set(options.get("exclude") or ())
+        exclude = options.get("exclude")
+        self.exclude = list(TESTS if exclude is None else exclude)  # glob patterns on names
         self.logs = bool(options.get("logs", True))
         self.per_minute = int(options.get("lines_per_minute", 20))
         self.settle_seconds = float(options.get("settle_seconds", 120))
@@ -80,8 +82,11 @@ class Containers:
             self.follow(f"{runtime} events", lambda command=command: command, self.events_handler(runtime))
             if self.logs:
                 for name, labels in self.running(runtime):
-                    if name not in self.exclude and not skipped(labels):
+                    if not self.excluded(name) and not skipped(labels):
                         self.follow_logs(runtime, name)
+
+    def excluded(self, name: str) -> bool:
+        return any(fnmatch.fnmatch(name, pattern) for pattern in self.exclude)
 
     def running(self, runtime: str) -> list[tuple[str, dict[str, str]]]:
         fmt = "json" if runtime == "podman" else "{{json .}}"
@@ -122,7 +127,7 @@ class Containers:
     def events_handler(self, runtime: str) -> Callable[[str], list[Action]]:
         def handle(line: str) -> list[Action]:
             event = parse(runtime, line)
-            if event is None or not event.name or event.name in self.exclude or skipped(event.labels):
+            if event is None or not event.name or self.excluded(event.name) or skipped(event.labels):
                 return []
             return self.event(runtime, event)
 

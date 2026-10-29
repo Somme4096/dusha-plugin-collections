@@ -25,6 +25,10 @@ class Action:
     row: str = "log"  # the kind a `log` action is stored as
 
 
+# The collection's own tests write to the real journal and podman, so a running ambient skips them.
+TESTS = ["dusha-test-*"]
+
+
 def mask(text: str) -> str:
     """The same line with its numbers and ids blanked, so repeats fold together."""
     return re.sub(r"0x[0-9a-fA-F]+|\b[0-9a-fA-F]{8,}\b|\d+", "#", text)

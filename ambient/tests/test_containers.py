@@ -45,10 +45,10 @@ async def _until(http, name: str, kind: str, count: int, timeout: float = 20.0) 
 
 
 async def test_containers_alert_on_crashes_not_stops_and_keep_their_stderr(tmp_path, plugins_dir):
-    crash = f"dusha-crash-{os.getpid()}"
-    calm = f"dusha-calm-{os.getpid()}"
+    crash = f"dusha-test-crash-{os.getpid()}"
+    calm = f"dusha-test-calm-{os.getpid()}"
     script = "sleep 1; echo fine; echo same-error >&2; echo same-error >&2; echo other >&2; sleep 1; exit 3"
-    containers = {"runtimes": ["podman"], "settle_seconds": 2}
+    containers = {"runtimes": ["podman"], "settle_seconds": 2, "exclude": []}
     options = {"device": "desktop", "sample_seconds": 1, "containers": containers}
     config = make_config(tmp_path / "data", plugins_dir, {"ambient": options})
     try:

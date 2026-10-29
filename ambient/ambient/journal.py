@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+import fnmatch
 import json
 import re
 import time
 from typing import Any
 
-from .streams import Action, Folder, mask
+from .streams import TESTS, Action, Folder, mask
 
 UNIT_FAILED = "d9b373ed55a64feb8242e02dbe79a49c"
 JOB_DONE = "39f53479d3a045ac8e11786248231fbf"
@@ -43,7 +44,8 @@ def _name(entry: dict[str, Any]) -> str:
 class Journal:
     def __init__(self, options: dict[str, Any], resume: dict[str, Any] | None):
         self.priority = int(options.get("priority", 3))
-        self.exclude_units = set(options.get("exclude_units") or ())
+        units = options.get("exclude_units")
+        self.exclude_units = list(TESTS if units is None else units)  # glob patterns
         self.exclude = [re.compile(pattern) for pattern in options.get("exclude_patterns") or ()]
         self.resume_seconds = float(options.get("resume_hours", 24)) * 3600
         self.folder = Folder(float(options.get("fold_minutes", 60)))
@@ -88,7 +90,8 @@ class Journal:
         first = message.splitlines()[0] if message else ""
         unit = entry.get("UNIT") or entry.get("USER_UNIT") or ""
         name = _name(entry)
-        if {unit, name, entry.get("_SYSTEMD_UNIT"), entry.get("_SYSTEMD_USER_UNIT")} & self.exclude_units:
+        names = {unit, name, entry.get("_SYSTEMD_UNIT") or "", entry.get("_SYSTEMD_USER_UNIT") or ""}
+        if any(fnmatch.fnmatch(item, pattern) for item in names for pattern in self.exclude_units):
             return None
         if any(pattern.search(message) for pattern in self.exclude):
             return None
