@@ -47,7 +47,8 @@
           "extra_body": {
             "reasoning_effort": "minimal"
           }
-        }
+        },
+        "packages": {}
       }
     }
   },

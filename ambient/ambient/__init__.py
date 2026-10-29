@@ -24,6 +24,7 @@ from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 
 from . import gpu as _gpu
+from . import packages as _packages
 from . import screen as _screen
 from .redact import Redactor
 
@@ -62,6 +63,10 @@ CREATE TABLE IF NOT EXISTS rollups (
     max REAL NOT NULL,
     n INTEGER NOT NULL,
     PRIMARY KEY (device, name, hour)
+);
+CREATE TABLE IF NOT EXISTS state (
+    key TEXT PRIMARY KEY,
+    value_json TEXT NOT NULL
 );
 """
 
@@ -115,6 +120,8 @@ class Options:
     max_observations: int = 5000
     redact: dict[str, Any] = field(default_factory=dict)
     screen: dict[str, Any] = field(default_factory=dict)
+    # Each of these sources is on when its key is present, even as `{}`.
+    packages: dict[str, Any] | None = None
 
 
 def peer(value: Any, settings: Any, label: str) -> Connection | None:
@@ -139,12 +146,16 @@ def parse_options(raw: dict[str, Any], settings: Any) -> Options:
     unknown = sorted(set(raw) - set(Options.__dataclass_fields__))
     if unknown:
         raise ValueError(f"unknown ambient option(s): {unknown}")
-    screen = raw.get("screen") or {}
-    unknown = sorted(set(screen) - SCREEN_KEYS)
-    if unknown:
-        raise ValueError(f"unknown ambient screen option(s): {unknown}")
+    for name, keys in {"screen": SCREEN_KEYS, **SOURCE_KEYS}.items():
+        unknown = sorted(set(raw.get(name) or {}) - keys)
+        if unknown:
+            raise ValueError(f"unknown ambient {name} option(s): {unknown}")
     return Options(device=device, forward_to=forward_to, alerts=alerts, **raw)
 
+
+SOURCE_KEYS = {
+    "packages": {"backends", "every_seconds"},
+}
 
 SCREEN_KEYS = {
     "every_seconds",
@@ -299,6 +310,9 @@ class Ambient:
         self.sample_outbox: deque[dict[str, Any]] = deque(maxlen=5000)
         self.net_before: tuple[float, float, float] | None = None
         self.gpus = _gpu.Gpus()
+        self.packages = None
+        if options.packages is not None:
+            self.packages = _packages.Watch(_packages.detect(options.packages.get("backends")))
         if psutil is not None:
             psutil.cpu_percent(interval=None)  # the first reading is always 0, prime it
         # Alerts still open from before a restart, so they can resolve.
@@ -311,6 +325,17 @@ class Ambient:
             )
             if row["key"]
         }
+
+    def get_state(self, key: str, default: Any = None) -> Any:
+        rows = self.store.execute("SELECT value_json FROM state WHERE key=?", (key,))
+        return json.loads(rows[0]["value_json"]) if rows else default
+
+    def set_state(self, key: str, value: Any) -> None:
+        self.store.execute(
+            "INSERT INTO state(key, value_json) VALUES(?,?) "
+            "ON CONFLICT(key) DO UPDATE SET value_json=excluded.value_json",
+            (key, json.dumps(value)),
+        )
 
     # Events.
 
@@ -417,9 +442,7 @@ class Ambient:
             values["battery.plugged"] = 1.0 if battery.power_plugged else 0.0
         return values
 
-    def sample(self) -> None:
-        now = time.time()
-        values = self.read_local()
+    def record(self, values: dict[str, float], now: float) -> None:
         samples = [
             Sample(device=self.options.device, name=name, ts=now, value=value)
             for name, value in values.items()
@@ -428,9 +451,23 @@ class Ambient:
             self.store_samples(samples)
             if self.options.forward_to is not None:
                 self.sample_outbox.extend(item.model_dump() for item in samples)
+
+    def sample(self) -> None:
+        now = time.time()
+        values = self.read_local()
+        self.record(values, now)
+        if values:
             self.check_alerts(values, now)
         self.forward()
         self.maintain(now)
+
+    def check_packages(self) -> None:
+        now = time.time()
+        values, events, state = self.packages.check(self.get_state("packages", {}), now)
+        self.set_state("packages", state)
+        self.record(values, now)
+        for text in events:
+            self.observe(Observation(source="packages", text=text))
 
     def series(self, device: str, name: str, since: float) -> list[tuple[float, float]]:
         rows = self.store.execute(
@@ -546,29 +583,37 @@ class Ambient:
                 )
         for key, (firing, describe) in checks.items():
             if firing and key not in self.active_alerts:
-                text = describe()
-                result = self.observe(
-                    Observation(
-                        source="ambient",
-                        kind="alert",
-                        text=text,
-                        ttl_seconds=7 * 24 * 3600,
-                        data={"alert_key": key},
-                    )
-                )
-                self.active_alerts[key] = result["id"]
-                self.ctx.emit("ambient.alert", {"device": self.options.device, "text": text, "key": key})
-            elif not firing and key in self.active_alerts:
-                del self.active_alerts[key]
-                self.observe(
-                    Observation(
-                        source="ambient",
-                        kind="resolved",
-                        text=f"{key} back to normal",
-                        ttl_seconds=3600,
-                        data={"alert_key": key},
-                    )
-                )
+                self.open_alert(key, describe())
+            elif not firing:
+                self.resolve_alert(key)
+
+    def open_alert(self, key: str, text: str, source: str = "ambient", data: dict | None = None) -> None:
+        if key in self.active_alerts:
+            return
+        result = self.observe(
+            Observation(
+                source=source,
+                kind="alert",
+                text=text,
+                ttl_seconds=7 * 24 * 3600,
+                data={**(data or {}), "alert_key": key},
+            )
+        )
+        self.active_alerts[key] = result["id"]
+        self.ctx.emit("ambient.alert", {"device": self.options.device, "text": text, "key": key})
+
+    def resolve_alert(self, key: str, source: str = "ambient") -> None:
+        if self.active_alerts.pop(key, None) is None:
+            return
+        self.observe(
+            Observation(
+                source=source,
+                kind="resolved",
+                text=f"{key} back to normal",
+                ttl_seconds=3600,
+                data={"alert_key": key},
+            )
+        )
 
     def _sustained(self, name: str, minutes: float, now: float) -> float | None:
         """The average over the last `minutes`, or None until samples cover most of that window."""
@@ -791,6 +836,8 @@ def apply(ctx: Any, config: dict[str, Any]) -> None:
         ctx.interval(watch.every, watch.tick)
         ctx.on("presence.capabilities", lambda: ["look"])
         ctx.on("screenshot.look", lambda body=None: watch.look())
+    if ambient.packages is not None:
+        ctx.interval(options.packages.get("every_seconds", 3 * 3600), ambient.check_packages)
     ctx.on_dispose(ambient.store.close)
     ctx.on_dispose(ambient.gpus.close)
     _routes(ctx.api, ambient)
