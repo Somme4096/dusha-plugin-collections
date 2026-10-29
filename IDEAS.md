@@ -312,3 +312,57 @@ Mostly tiny hooks that `curl` ambient, not plugins.
 - **SystemOne (`LiquidAI/d1-3B` on the NAS):** `proactive.decide` through system_one answered `c1/task` when stuck for 25 minutes and `none` in deep focus, the same in four runs, in 2–4s.
 - **Vision through opencode-go (`muse-spark-1.3-contributor`):** cheapest on Go, but Meta trains on its prompts and completions, so screenshots become training data. It also needs "Allow paid endpoints that train on request data". It works on `chat/completions` although the docs list `responses`. With `extra_body: {"reasoning_effort": "minimal"}` a synthetic screen took 3.1s and was described accurately. `none` and `thinking` are rejected, and the default spends about 980 tokens reasoning.
 - **Muse on real screens:** three captures took 4–7s each, named every pane, quoted her messages, and tracked `communicating`, `waiting`, then `continued`. Images go out unredacted, so anything visible (an open config.json with keys) reaches Meta. Only the stored text is redacted.
+
+### More ambient sources (agreed 2026-10-29)
+
+**Layout.** Each source is plain code beside `redact.py` and `screen.py`, and every `ctx` call stays in `__init__.py`.
+
+- `journal.py` and `containers.py` stream, `gpu.py` adds to the metrics sample, `packages/` polls.
+- A source becomes a package of backends only once a second backend exists. `packages/` starts that way: `rpm_ostree.py` (with bootc), `flatpak.py`, `brew.py`, `macos.py`.
+- A backend has a `name`, `available()`, and `read()`. Adding one is one file plus one line in an explicit `BACKENDS` list, no auto-discovery. Detection is automatic, and config can narrow it.
+
+**journal** (`source: "journal"`, Linux only, macOS `log stream` later)
+
+- Streams `journalctl -f -o json`, system and user journals.
+- Keeps priority `err` or worse by default, plus unit failures, coredumps, kernel OOM kills, auth failures (sudo, ssh, login), and SELinux AVC denials (one row per denial kind per hour). Thermal is out, it's unreliable on Silverblue.
+- `exclude` takes units and message patterns.
+- Repeats are folded by unit and line with digits and hex masked, one row per minute with a count.
+- A failed unit opens an alert keyed `unit:<name>`, resolved when it starts cleanly again.
+- The cursor is saved and resumed after a restart, capped at 24h back (configurable). A first run reads from the current boot.
+- Entries with `CONTAINER_NAME` are skipped, they belong to the container source.
+
+**containers** (`source: "container"`)
+
+- Streams `podman events` and `docker events` as JSON, whichever exists.
+- Alerts keyed `container:<name>`: non-zero exit, OOM kill, `unhealthy`, a restart loop (3+ in 10 minutes). Resolved once running and healthy. Plain starts and stops are not recorded.
+- Captures stderr continuously, folded like the journal and capped per container. Stdout stays out.
+- Quadlet containers (`PODMAN_SYSTEMD_UNIT` label) don't alert, the unit alert covers them.
+
+**gpu** (metrics, not a source)
+
+- NVML through optional `nvidia-ml-py`, like `psutil`. Missing means no GPU metrics.
+- Per GPU index: `gpu.util.percent`, `gpu.mem.percent`, `gpu.temp.c`, `gpu.power.w`.
+- Only a sustained temperature alert (85°C), naming the process with the most VRAM. No VRAM or utilization alerts, inference fills both on purpose.
+- AMD and Intel wait until a device has one.
+
+**packages** (`source: "packages"`)
+
+- Local reads only. Ambient never fetches or upgrades, the system's own timers fetch, and acting is proactive's job.
+- The OS image needs `AutomaticUpdatePolicy=check` in `/etc/rpm-ostreed.conf` for its update info to be cached.
+- Polled every few hours: `pkg.updates:<backend>` and `pkg.reboot_pending` (days since staged) as metrics, an event only on change. No alerts.
+- macOS reads `/Library/Preferences/com.apple.SoftwareUpdate.plist`, never `softwareupdate -l`. `mas` is skipped, it asks Apple's servers.
+- distrobox and toolbox containers are out, and so is plain `dnf`.
+
+**browser** (`source: "browser"`, `kind: "browse"`)
+
+- Copies Zen's `places.sqlite` and Chrome's `History` (with the WAL) and reads new visits every few minutes. Flatpak and macOS paths both. No extension, so no dwell time.
+- Profiles get labels in config, such as `"zen:Somme4096": "personal"` and `"chrome:Default": "work"`. Unlabeled profiles appear as `browser:profile`.
+- One row per label per poll, grouped by domain with titles. Rows carry `browser`, `profile`, and `label`.
+- Query strings and fragments are dropped, except search terms on known engines. `exclude` takes domains.
+
+**network** (`source: "network"`)
+
+- No TLS interception and no network-wide DNS.
+- DNS from `resolvectl monitor --json=short`, folded per domain per window, with CDN and connectivity noise collapsed. A domain unseen for N days is an event.
+- `psutil.net_connections()` on each sample: which process talks to which hosts, and a newly listening port is an event.
+- macOS gets connection snapshots only.
