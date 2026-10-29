@@ -48,6 +48,44 @@ async def test_events_land_in_context_and_presence_changes_are_recorded(tmp_path
         assert {"ambient_recent", "ambient_metrics", "presence"} <= names
 
 
+async def test_context_carries_latest_metrics_and_network_per_device(tmp_path, plugins_dir):
+    config = make_config(tmp_path / "data", plugins_dir, {"ambient": _options()})
+    now = time.time()
+    samples = [
+        {"device": "desktop", "name": name, "ts": now - age, "value": value}
+        for age, values in ((120, {"cpu.percent": 90.0}), (5, {"cpu.percent": 34.4, "disk.percent:~": 72.0}))
+        for name, value in values.items()
+    ] + [
+        {"device": "macbook", "name": "battery.percent", "ts": now, "value": 88.0},
+        {"device": "macbook", "name": "battery.plugged", "ts": now, "value": 0.0},
+    ]
+    talkers = {"firefox": ["a", "b", "c"], "ssh": ["nas"], "curl": ["x", "y"], "git": ["github.com"]}
+    windows = [
+        {"text": "older window", "data": {"sites": {"old.example": 50}}, "created_at": now - 600},
+        {
+            "text": "latest window",
+            "data": {"sites": {"github.com": 40, "a.io": 9, "b.io": 5, "c.io": 1}, "talkers": talkers},
+        },
+    ]
+    async with client(config) as http:
+        observations = [
+            {"source": "network", "kind": "network", "device": "desktop", **row} for row in windows
+        ]
+        stored = await http.post(
+            "/state/v1/ambient/ingest", json={"observations": observations, "samples": samples}
+        )
+        assert stored.status_code == 200, stored.text
+        block = (await http.post("/state/v1/context", json={"query": "hi"})).json()["context"]["blocks"][
+            "ambient"
+        ]
+    assert block["metrics_now"] == ["desktop: cpu 34%, disk ~ 72%", "macbook: battery 88% unplugged"]
+    [network] = block["network_now"]
+    assert network.endswith(
+        "desktop: sites github.com (40), a.io (9), b.io (5)"
+        " | talking firefox (3 hosts), curl (2 hosts), git (1 host)"
+    )
+
+
 async def test_device_forwards_samples_and_events_to_the_hub(tmp_path, plugins_dir):
     hub_config = make_config(tmp_path / "hub", plugins_dir, {"ambient": _options()})
     with Server(hub_config, free_port()) as hub:

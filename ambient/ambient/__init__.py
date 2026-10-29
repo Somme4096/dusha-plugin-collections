@@ -11,7 +11,7 @@ import sqlite3
 import sys
 import threading
 import time
-from collections import deque
+from collections import Counter, deque
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
@@ -203,6 +203,38 @@ SCREEN_KEYS = {
 
 def _clock(ts: float) -> str:
     return datetime.fromtimestamp(ts).strftime("%H:%M")
+
+
+METRIC_FORMATS = {
+    "cpu.percent": "cpu {value:.0f}%",
+    "load.1": "load {value:.1f}",
+    "mem.percent": "mem {value:.0f}%",
+    "swap.percent": "swap {value:.0f}%",
+    "disk.percent": "disk {label} {value:.0f}%",
+    "gpu.util.percent": "gpu{label} {value:.0f}%",
+    "gpu.mem.percent": "gpu{label} vram {value:.0f}%",
+    "gpu.temp.c": "gpu{label} {value:.0f}°C",
+    "gpu.power.w": "gpu{label} {value:.0f} W",
+    "net.rx_kbps": "down {value:.0f} KB/s",
+    "net.tx_kbps": "up {value:.0f} KB/s",
+    "net.established": "{value:.0f} connections",
+    "battery.percent": "battery {value:.0f}%",
+    "uptime.hours": "up {value:.0f}h",
+}
+
+
+def _metrics_line(values: dict[str, float]) -> str:
+    order = {name: index for index, name in enumerate(METRIC_FORMATS)}
+    parts = []
+    for name in sorted(values, key=lambda name: (order.get(name.partition(":")[0], len(order)), name)):
+        base, _, label = name.partition(":")
+        if base == "battery.plugged":
+            continue
+        text = METRIC_FORMATS.get(base, f"{name} {{value:g}}").format(value=values[name], label=label)
+        if base == "battery.percent" and "battery.plugged" in values:
+            text += " plugged" if values["battery.plugged"] else " unplugged"
+        parts.append(text)
+    return ", ".join(parts)
 
 
 class Store:
@@ -926,6 +958,42 @@ class Ambient:
             used += len(line) + 1
         return list(reversed(lines))
 
+    def metrics_now(self) -> list[str]:
+        since = time.time() - max(300, self.options.sample_seconds * 3)
+        # SQLite takes the bare `value` from the row holding MAX(ts).
+        rows = self.store.execute(
+            "SELECT device, name, value, MAX(ts) FROM samples WHERE ts>=? GROUP BY device, name", (since,)
+        )
+        devices: dict[str, dict[str, float]] = {}
+        for row in rows:
+            devices.setdefault(row["device"], {})[row["name"]] = row["value"]
+        return [f"{device}: {_metrics_line(values)}" for device, values in sorted(devices.items())]
+
+    def network_now(self) -> list[str]:
+        latest: dict[str, dict[str, Any]] = {}
+        for item in self.recent(kind="network", hours=self.options.context_hours, limit=100):
+            latest.setdefault(item["device"], item)
+        lines = []
+        for device, item in sorted(latest.items()):
+            sites = Counter(item["data"].get("sites") or {}).most_common(3)
+            talkers = sorted(
+                (item["data"].get("talkers") or {}).items(), key=lambda pair: (-len(pair[1]), pair[0])
+            )
+            parts = []
+            if sites:
+                parts.append("sites " + ", ".join(f"{site} ({count})" for site, count in sites))
+            if talkers:
+                parts.append(
+                    "talking "
+                    + ", ".join(
+                        f"{name} ({len(hosts)} host{'s' if len(hosts) > 1 else ''})"
+                        for name, hosts in talkers[:3]
+                    )
+                )
+            if parts:
+                lines.append(f"{item['at']} {device}: {' | '.join(parts)}")
+        return lines
+
     def context(self, request: Any) -> Any:
         alerts = self.recent(kind="alert", hours=24 * 7, limit=10)
         events = [
@@ -934,11 +1002,17 @@ class Ambient:
             if item["kind"] not in ("alert", "screen", "network")
         ][: self.options.context_limit]
         screens = self.screen_rows(hours=self.options.context_hours, limit=6)
-        if not alerts and not events and not screens:
+        metrics = self.metrics_now()
+        network = self.network_now()
+        if not alerts and not events and not screens and not metrics and not network:
             return None
         data: dict[str, Any] = {}
         if alerts:
             data["alerts"] = [f"{item['device']}: {item['text']} (since {item['at']})" for item in alerts]
+        if metrics:
+            data["metrics_now"] = metrics
+        if network:
+            data["network_now"] = network
         if screens:
             latest = screens[-1]
             data["screen_now"] = f"{latest['at']} {latest['device']}: {latest['text']}"
