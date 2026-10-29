@@ -177,7 +177,7 @@ def decide(request: Any, options: Mapping[str, Any]) -> dict[str, str] | None:
     if not emotions:
         return None
     body: dict[str, Any] = {
-        "state": {"message": request.message, "emotion_state": request.state},
+        "state": {"message": request.message},
         "questions": {
             "emotion": {
                 "type": "choice",

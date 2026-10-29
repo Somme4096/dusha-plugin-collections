@@ -144,7 +144,7 @@ async def test_system_one_asks_the_classifier_and_applies_its_choice(
     assert request["authorization"] == "Bearer secret"
     assert request["body"]["model"] == "tiny"
     assert request["body"]["state"]["message"] == "hello"
-    assert "base" in request["body"]["state"]["emotion_state"]
+    assert request["body"]["state"] == {"message": "hello"}
     question = request["body"]["questions"]["emotion"]
     assert question["type"] == "choice"
     assert question["instructions"].strip()
