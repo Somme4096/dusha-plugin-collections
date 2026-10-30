@@ -49,6 +49,7 @@ KIND_INSTRUCTIONS = (
 @dataclass
 class Extras:
     target: Any = "latest"
+    away_target: Any = None
     min_gap_minutes: float = 10
     min_score: float = 0.0
     presence_overrides_quiet_hours: bool = True
@@ -71,6 +72,9 @@ def parse_options(raw: dict[str, Any]) -> tuple[ProactiveConfig, Extras]:
         isinstance(target, dict) and target.get("harness") and target.get("conversation_id")
     ):
         raise ValueError("better_proactive option 'target' must be 'latest' or {harness, conversation_id}")
+    away = extra.away_target
+    if away is not None and not (isinstance(away, dict) and away.get("harness")):
+        raise ValueError("better_proactive option 'away_target' must be {harness} or {harness, conversation_id}")
     return config, extra
 
 
@@ -163,15 +167,21 @@ class BetterProactive(ProactiveEngine):
         answers = list(self.ctx.collect("presence").values())
         return answers[0] if answers else None
 
-    def _route(self) -> dict[str, Any] | None:
-        target = self.extras.target
+    def _route(self, target: Any) -> dict[str, Any] | None:
         if target == "latest":
             return self.companion.latest_route()
         with self.database.connect() as db:
-            row = db.execute(
-                "SELECT * FROM conversations WHERE harness=? AND external_id=?",
-                (target["harness"], target["conversation_id"]),
-            ).fetchone()
+            if target.get("conversation_id"):
+                row = db.execute(
+                    "SELECT * FROM conversations WHERE harness=? AND external_id=?",
+                    (target["harness"], target["conversation_id"]),
+                ).fetchone()
+            else:
+                row = db.execute(
+                    """SELECT * FROM conversations WHERE harness=? AND route != ''
+                       ORDER BY updated_at DESC, id DESC LIMIT 1""",
+                    (target["harness"],),
+                ).fetchone()
         return dict(row) if row else None
 
     def plan(self, current: datetime, ask_judge: bool = True) -> dict[str, Any]:
@@ -179,11 +189,13 @@ class BetterProactive(ProactiveEngine):
         state = self.affect.status(current)
         blocked = self._blocked(state, current)
         presence = self._presence()
+        here = bool(presence and presence.get("active_device"))
         if blocked is None and self._quiet(current):
-            here = bool(presence and presence.get("active_device"))
             if not (self.extras.presence_overrides_quiet_hours and here):
                 blocked = "quiet hours"
-        route = self._route()
+        # Away from every device: reach her where she still is, such as Discord on her phone.
+        away = self._route(self.extras.away_target) if not here and self.extras.away_target else None
+        route = away or self._route(self.extras.target)
         if blocked is None and not route:
             blocked = "no conversation to send to"
         candidates = self.candidates(state, current) if blocked is None else []
@@ -194,7 +206,7 @@ class BetterProactive(ProactiveEngine):
             else None
         )
         for item in candidates:
-            item["skipped"] = self._skip(item, used, presence, since_user)
+            item["skipped"] = self._skip(item, used, here or away is not None, since_user)
         eligible = [item for item in candidates if not item["skipped"]]
         judge = self._judge(eligible, state, route, presence, current, ask_judge) if eligible else None
         if judge is not None and judge.get("answered"):
@@ -341,13 +353,13 @@ class BetterProactive(ProactiveEngine):
             return {row["dedup_key"] for row in rows}
 
     def _skip(
-        self, item: dict[str, Any], used: set[str], presence: dict[str, Any] | None, since_user: float | None
+        self, item: dict[str, Any], used: set[str], reachable: bool, since_user: float | None
     ) -> str:
         if item["dedup_key"] in used:
             return "already raised"
         if item["score"] < self.extras.min_score:
             return "score below min_score"
-        if item["requires_presence"] == "active" and not (presence and presence.get("active_device")):
+        if item["requires_presence"] == "active" and not reachable:
             return "she isn't at any device"
         if (
             item["source"] != "silence"

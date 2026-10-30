@@ -97,6 +97,25 @@ async def test_plan_explains_skips_and_alerts_wait_for_her(tmp_path, plugins_dir
         assert alert["skipped"] == "she talked just now"
 
 
+async def test_away_from_every_device_alerts_fall_back_to_the_away_target(tmp_path, plugins_dir, fake_desktop):
+    stack = _stack(fake_desktop, away_target={"harness": "discord"})
+    config = make_config(tmp_path / "data", plugins_dir, stack)
+    async with client(config) as http:
+        await _say(http)
+        await http.post(
+            "/state/v1/messages",
+            json={"harness": "cli", "conversation_id": "term", "role": "user", "content": "hi", "route": "cli"},
+        )
+        await http.post(
+            "/state/v1/ambient",
+            json={"source": "ambient", "kind": "alert", "device": "desktop", "text": "disk ~ at 95%"},
+        )
+        await http.post("/state/v1/proactive/evaluate")
+        [event] = (await http.get("/state/v1/proactive/events", params={"consumer": "bot"})).json()["events"]
+    assert event["reason"] == "ambient_alert"
+    assert event["target"] == {"harness": "discord", "conversation_id": "dm", "route": "discord-dm"}
+
+
 async def test_silence_still_works_like_the_builtin(tmp_path, plugins_dir, fake_desktop):
     stack = _stack(fake_desktop, min_silence_minutes=0, thresholds={"longing": 0.0})
     config = make_config(tmp_path / "data", plugins_dir, stack)

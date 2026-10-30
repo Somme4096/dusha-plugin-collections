@@ -187,6 +187,7 @@ Mostly tiny hooks that `curl` ambient, not plugins.
 - The silence candidate's score is 0.4 plus the ruling feeling's deviation.
 - Prompts: the generation instruction is the built-in one, plus "Why you're reaching out now: <topic>", plus for `task` candidates "Before you write, do this with your tools: ...". Context is built with the topic as the query.
 - Options: `target` (`"latest"` or `{harness, conversation_id}`) and `min_score`.
+- `away_target` (`{harness}` for its latest conversation, or `{harness, conversation_id}`) is used instead of `target` when presence sees no active device, and then `requires_presence: "active"` candidates are raised there too. Without a conversation on it, `target` and the presence gate apply as before.
 - `dusha proactive plan` shows the gate result and every candidate with why it was skipped, without queueing anything.
 - The payload adds `source`, `kind`, `topic`, and `candidate_context` next to every built-in field.
 
