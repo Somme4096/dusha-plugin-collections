@@ -1,0 +1,13 @@
+[project]
+name = "dusha-hands"
+version = "0.1.0"
+description = "Shell, input, and window control on this device, reached through relay"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.uv]
+package = false
+
+[tool.dusha]
+entry = "hands"
+inject = ["api", "cli"]

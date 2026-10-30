@@ -24,6 +24,8 @@ PLUGINS = (
     "everos_memory",
     "spawn",
     "music",
+    "hands",
+    "voice",
 )
 
 

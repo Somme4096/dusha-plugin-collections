@@ -1,0 +1,13 @@
+[project]
+name = "dusha-voice"
+version = "0.1.0"
+description = "Speaks text aloud on this device, with a speed per mood"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.uv]
+package = false
+
+[tool.dusha]
+entry = "voice"
+inject = ["api", "cli"]

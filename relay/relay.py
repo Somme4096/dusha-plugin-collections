@@ -22,6 +22,11 @@ CAPABILITIES = {
     "notify": ("/state/v1/notification", "notification.send"),
     "spawn": ("/state/v1/spawn", "spawn.run"),
     "music": ("/state/v1/music", "music.control"),
+    "shell": ("/state/v1/hands/shell", "hands.shell"),
+    "type": ("/state/v1/hands/type", "hands.type"),
+    "key": ("/state/v1/hands/key", "hands.key"),
+    "windows": ("/state/v1/hands/windows", "hands.windows"),
+    "speak": ("/state/v1/voice", "voice.speak"),
 }
 
 
@@ -33,6 +38,7 @@ class Options:
     mirror_proactive: bool = True
     mirror_title: str = "dusha"
     spawn_timeout_seconds: float = 1800
+    mirror_voice: bool = False
 
 
 def _ago(moment: str | None) -> str:
@@ -140,13 +146,37 @@ class Relay:
         # The device enforces the limit and answers with what it has, so wait a little longer than it does.
         return {"device": device, **self.call(self.resolve(device, "spawn"), "spawn", body, seconds + 30)}
 
+    def _auto(self, device: str) -> str:
+        if device != "auto":
+            return device
+        active = self.presence().get("active_device") or ""
+        if not active:
+            raise ValueError("she isn't active on any device right now, so name one")
+        return active
+
+    def _act(self, device: str, capability: str, body: dict[str, Any], timeout: float = 0) -> Any:
+        device = self._auto(device)
+        return {"device": device, **self.call(self.resolve(device, capability), capability, body, timeout)}
+
+    def shell(self, command: str, device: str = "auto", cwd: str = "", timeout_seconds: float = 60) -> Any:
+        body = {"command": command, "cwd": cwd, "timeout_seconds": timeout_seconds}
+        return self._act(device, "shell", body, timeout_seconds + 15)
+
+    def type_text(self, text: str, device: str = "auto") -> Any:
+        return self._act(device, "type", {"text": text})
+
+    def press_key(self, key: str, device: str = "auto") -> Any:
+        return self._act(device, "key", {"text": key})
+
+    def list_windows(self, device: str = "auto") -> Any:
+        return self._act(device, "windows", {})
+
+    def speak(self, text: str, device: str = "auto", mood: str = "") -> Any:
+        return self._act(device, "speak", {"text": text, "mood": mood})
+
     def music(self, action: str = "status", query: str = "", device: str = "auto", player: str = "") -> Any:
-        if device == "auto":
-            device = self.presence().get("active_device") or ""
-            if not device:
-                raise ValueError("she isn't active on any device right now, so name one")
         body = {"action": action, "query": query, "player": player}
-        return {"device": device, **self.call(self.resolve(device, "music"), "music", body)}
+        return self._act(device, "music", body)
 
     def mirror(self, text: str, event: Any = None) -> None:
         if not text or not self.options.mirror_proactive:
@@ -161,6 +191,9 @@ class Relay:
         def send() -> None:
             try:
                 self.notify(self.options.mirror_title, text, device=active)
+                if self.options.mirror_voice:
+                    feeling = (event or {}).get("ruling_feeling") or {}
+                    self.speak(text, active, str(feeling.get("dimension") or ""))
             except ValueError as error:
                 logger.info("relay could not mirror a proactive message to %s: %s", active, error)
 
@@ -208,8 +241,34 @@ def apply(ctx: Any, config: dict[str, Any]) -> None:
         option("player", default=""),
     ]
     ctx.mcp.tool("music", relay.music, help=music_help, args=music_args)
+    hand_tools = [
+        (
+            "shell",
+            relay.shell,
+            "Run a shell command on one of her devices",
+            [
+                arg("command"),
+                device_arg,
+                option("cwd", default=""),
+                option("timeout_seconds", float, default=60),
+            ],
+        ),
+        ("type_text", relay.type_text, "Type text on one of her devices", [arg("text"), device_arg]),
+        ("press_key", relay.press_key, "Press a key on one of her devices", [arg("key"), device_arg]),
+        ("list_windows", relay.list_windows, "List open windows on one of her devices", [device_arg]),
+        (
+            "speak",
+            relay.speak,
+            "Say something out loud on one of her devices",
+            [arg("text"), device_arg, option("mood", default="")],
+        ),
+    ]
+    for name, handler, text, tool_args in hand_tools:
+        ctx.mcp.tool(name, handler, help=text, args=tool_args)
     group = ctx.cli.group("relay", "Reach her other devices")
     group.command("look", relay.look, help=look_help, args=[device_arg])
     group.command("notify", relay.notify, help=notify_help, args=notify_args)
     group.command("spawn", relay.spawn, help=spawn_help, args=spawn_args)
     group.command("music", relay.music, help=music_help, args=music_args)
+    for name, handler, text, tool_args in hand_tools:
+        group.command(name.replace("_", "-"), handler, help=text, args=tool_args)
