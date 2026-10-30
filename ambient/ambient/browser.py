@@ -27,6 +27,11 @@ ROOTS = {
 ROOTS["firefox"].append(MAC / "Firefox")
 ROOTS["chrome"].append(MAC / "Google/Chrome")
 ROOTS["chromium"].append(MAC / "Chromium")
+ROAMING, LOCAL = HOME / "AppData/Roaming", HOME / "AppData/Local"
+ROOTS["zen"].append(ROAMING / "zen")
+ROOTS["firefox"].append(ROAMING / "Mozilla/Firefox")
+ROOTS["chrome"].append(LOCAL / "Google/Chrome/User Data")
+ROOTS["chromium"].append(LOCAL / "Chromium/User Data")
 FIREFOX = {"zen", "firefox"}
 # Firefox visit types kept: link, typed, bookmark, download. The rest are embeds, redirects, frames, reloads.
 FIREFOX_VISITS = (1, 2, 3, 7)

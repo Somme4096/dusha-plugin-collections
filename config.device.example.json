@@ -56,7 +56,12 @@
           }
         },
         "files": {},
-        "network": {}
+        "network": {},
+        "calendar": {
+          "sources": [
+            "~/calendar.ics"
+          ]
+        }
       }
     },
     "spawn": {
@@ -82,6 +87,20 @@
           "audacious"
         ],
         "youtube_music": "http://127.0.0.1:26538"
+      }
+    },
+    "hands": {
+      "options": {}
+    },
+    "voice": {
+      "options": {
+        "moods": {}
+      }
+    },
+    "diary": {
+      "options": {
+        "vault": "~/Documents/vault",
+        "source": "proxy"
       }
     }
   },

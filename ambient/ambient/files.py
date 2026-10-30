@@ -254,7 +254,7 @@ class Inotify:
 
 
 class FSEvents:
-    """macOS: watchdog over FSEvents, one subscription per root whatever its size."""
+    """macOS and Windows: watchdog, one subscription per root whatever its size."""
 
     def __init__(self, changes: Changes, roots: list[str]):
         from watchdog.events import FileSystemEventHandler
@@ -295,7 +295,7 @@ class Files:
         self.watcher: Inotify | FSEvents | None = None
 
     def start(self) -> None:
-        backend: Callable[[Changes, list[str]], Any] = FSEvents if sys.platform == "darwin" else Inotify
+        backend: Callable[[Changes, list[str]], Any] = Inotify if sys.platform == "linux" else FSEvents
         try:
             self.watcher = backend(self.changes, self.roots).start()
         except ImportError:

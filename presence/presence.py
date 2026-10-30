@@ -171,6 +171,30 @@ def _macos(idle_after: float) -> tuple[str, float | None] | None:
     return ("idle" if idle >= idle_after else "active"), idle
 
 
+def _windows(idle_after: float) -> tuple[str, float | None] | None:
+    import ctypes
+
+    class LastInput(ctypes.Structure):
+        _fields_ = [("size", ctypes.c_uint), ("time", ctypes.c_uint)]
+
+    user32, kernel32 = ctypes.windll.user32, ctypes.windll.kernel32
+    info = LastInput(ctypes.sizeof(LastInput), 0)
+    if not user32.GetLastInputInfo(ctypes.byref(info)):
+        return None
+    idle = ((kernel32.GetTickCount() - info.time) & 0xFFFFFFFF) / 1000
+    # The lock screen is a secure desktop: this session can't open or switch to it.
+    user32.OpenInputDesktop.restype = ctypes.c_void_p
+    desktop = user32.OpenInputDesktop(0, False, 0x0100)
+    locked = not desktop
+    if desktop:
+        handle = ctypes.c_void_p(desktop)
+        locked = not user32.SwitchDesktop(handle)
+        user32.CloseDesktop(handle)
+    if locked:
+        return "locked", idle
+    return ("idle" if idle >= idle_after else "active"), idle
+
+
 def sense(options: Options) -> tuple[str, float | None]:
     if options.sensor == "none":
         return "unknown", None
@@ -178,6 +202,8 @@ def sense(options: Options) -> tuple[str, float | None]:
     found = _linux(options.idle_after_seconds) if system == "Linux" else None
     if system == "Darwin":
         found = _macos(options.idle_after_seconds)
+    if system == "Windows":
+        found = _windows(options.idle_after_seconds)
     return found or ("unknown", None)
 
 

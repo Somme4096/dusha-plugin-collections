@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import platform
 import shutil
 import socket
@@ -19,6 +20,19 @@ from pydantic import BaseModel, Field
 logger = logging.getLogger("dusha.notification")
 
 URGENCIES = ("low", "normal", "critical")
+# Windows PowerShell's own app id: toasts need a registered one, and this one always exists.
+WINDOWS_TOAST = r"""
+[Windows.UI.Notifications.ToastNotificationManager,Windows.UI.Notifications,ContentType=WindowsRuntime] `
+    | Out-Null
+$kind = [Windows.UI.Notifications.ToastTemplateType]::ToastText02
+$xml = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent($kind)
+$lines = $xml.GetElementsByTagName('text')
+$lines.Item(0).AppendChild($xml.CreateTextNode($env:DUSHA_TITLE)) | Out-Null
+$lines.Item(1).AppendChild($xml.CreateTextNode($env:DUSHA_BODY)) | Out-Null
+$toast = [Windows.UI.Notifications.ToastNotification]::new($xml)
+$app = '{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\WindowsPowerShell\v1.0\powershell.exe'
+[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier($app).Show($toast)
+"""
 CHANNELS = ("auto", "desktop", "phone", "all")
 NTFY_PRIORITY = {"low": 2, "normal": 3, "critical": 5}
 
@@ -121,6 +135,11 @@ class Notifier:
                 "end run",
             ]
             subprocess.run(["osascript", *script, title, body], check=True, timeout=10, capture_output=True)
+            return
+        if system == "Windows":
+            env = {**os.environ, "DUSHA_TITLE": title, "DUSHA_BODY": body}
+            command = ["powershell", "-NoProfile", "-Command", WINDOWS_TOAST]
+            subprocess.run(command, check=True, timeout=15, capture_output=True, env=env)
             return
         if not shutil.which("notify-send"):
             raise RuntimeError("notify-send is not installed")

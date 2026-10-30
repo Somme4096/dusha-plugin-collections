@@ -433,3 +433,15 @@ tui and pet wait for the maid session. playground is dropped.
 - presence through `GetLastInputInfo` and `OpenInputDesktop`, notification through PowerShell toasts, screen through `PIL.ImageGrab`, files through watchdog, browser paths under `%LOCALAPPDATA%` and `%APPDATA%`, a pending-reboot reader in the registry, music through WinRT.
 - journal and containers stay off.
 - `dusha proxy` needs `fcntl` out of `client/outbox.py` in dusha core.
+
+#### Made while building them
+
+- **spawn:** a real `opencode acp` run wrote a file and answered in 5s. `model` goes through `session/set_config_option`. dusha's MCP handler runs in a thread with no time limit, so the only limit on one blocking call is the harness's MCP timeout.
+- **Local relay calls:** dusha logs and drops an exception raised in a `collect` listener, so device plugins answer `{"error": ...}` to their same-process listener, and relay raises it.
+- **music:** `busctl --json=short` reads MPRIS without a new dependency. A browser tab is a player too, so `players` and `ignore` filter by name. Rows use `kind: "music"`, kept out of `recent` and shown as `music_now`, because a song every 3 minutes would crowd out the 12 rows. Song search matches path words only, not tags.
+- **YouTube Music:** `/api/v1/search` and `/api/v1/queue` come from the app's bundle, and the fake in the test copies them. It has not run against the real app, since the plugin is off here. The search answer is parsed from `musicResponsiveListItemRenderer`, which is the guess most likely to need fixing.
+- **hands:** typing, keys, and windows are advertised only with a tool installed, and this GNOME Wayland desktop has none, so it offers `shell` alone.
+- **digest:** ambient rows expire after `event_ttl_hours` (6), so the hub example raises it to 26. Without that a digest sees 6 hours.
+- **inbox:** `proactive.held` fires from `evaluate` only, so polling `plan` stays free of side effects. Rows dedupe on `dedup_key`.
+- **Windows:** `dusha proxy` needs the `fcntl` fix in dusha's `client/outbox.py`, left uncommitted in `../dusha` for review. The guide lives in `docs/WINDOWS.md`.
+

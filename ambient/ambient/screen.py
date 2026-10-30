@@ -165,7 +165,16 @@ def _portal_available() -> bool:
     return True
 
 
+def _imagegrab() -> bytes:
+    from PIL import ImageGrab
+
+    buffer = io.BytesIO()
+    ImageGrab.grab(all_screens=True).save(buffer, "PNG")
+    return buffer.getvalue()
+
+
 BACKENDS = {
+    "imagegrab": (lambda: platform.system() == "Windows", _imagegrab),
     "portal": (_portal_available, _portal),
     "grim": (
         lambda: platform.system() == "Linux" and bool(shutil.which("grim")),
