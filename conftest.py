@@ -23,6 +23,7 @@ PLUGINS = (
     "system_one",
     "everos_memory",
     "spawn",
+    "music",
 )
 
 

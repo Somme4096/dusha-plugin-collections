@@ -200,6 +200,13 @@ class Spawner:
         self.ctx.emit("ambient.observe", {"source": "spawn", "text": text})
         return result
 
+    def local(self, body: dict[str, Any]) -> dict[str, Any]:
+        """relay in this same process, where a raised error would be logged and lost."""
+        try:
+            return self.run(**body)
+        except ValueError as error:
+            return {"error": str(error)}
+
     def _prompt(self, client: Acp, agent: Agent, prompt: str, cwd: str, deadline: float) -> str:
         session = ""
         try:
@@ -242,7 +249,7 @@ class Spawner:
 def apply(ctx: Any, config: dict[str, Any]) -> None:
     spawner = Spawner(ctx, parse_options(config))
     ctx.on("presence.capabilities", lambda: ["spawn"] if spawner.available() else [])
-    ctx.on("spawn.run", lambda body: spawner.run(**body))
+    ctx.on("spawn.run", spawner.local)
     ctx.on_dispose(spawner.close)
     _routes(ctx.api, spawner)
     group = ctx.cli.group("spawn", "ACP agents on this machine")

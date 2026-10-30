@@ -1,0 +1,13 @@
+[project]
+name = "dusha-music"
+version = "0.1.0"
+description = "What's playing on each device, and optional control of its music player"
+requires-python = ">=3.11"
+dependencies = ["httpx>=0.27,<1", "winrt-Windows.Media.Control>=3; sys_platform == 'win32'", "winrt-Windows.Foundation>=3; sys_platform == 'win32'"]
+
+[tool.uv]
+package = false
+
+[tool.dusha]
+entry = "music"
+inject = ["api", "cli"]

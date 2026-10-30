@@ -70,6 +70,19 @@
           }
         }
       }
+    },
+    "music": {
+      "options": {
+        "device": "macbook",
+        "control": true,
+        "library": [
+          "~/Music"
+        ],
+        "local_command": [
+          "audacious"
+        ],
+        "youtube_music": "http://127.0.0.1:26538"
+      }
     }
   },
   "proxy": {

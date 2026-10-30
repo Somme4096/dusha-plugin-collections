@@ -21,6 +21,7 @@ CAPABILITIES = {
     "look": ("/state/v1/screenshot", "screenshot.look"),
     "notify": ("/state/v1/notification", "notification.send"),
     "spawn": ("/state/v1/spawn", "spawn.run"),
+    "music": ("/state/v1/music", "music.control"),
 }
 
 
@@ -80,6 +81,8 @@ class Relay:
             answers = list(self.ctx.collect(event, body).values())
             if not answers:
                 raise ValueError(f"nothing on this machine answers {capability}")
+            if isinstance(answers[0], dict) and "error" in answers[0]:
+                raise ValueError(answers[0]["error"])
             return answers[0]
         if not entry.get("url"):
             raise ValueError(f"{entry['device']} did not report a URL to reach it at")
@@ -137,6 +140,14 @@ class Relay:
         # The device enforces the limit and answers with what it has, so wait a little longer than it does.
         return {"device": device, **self.call(self.resolve(device, "spawn"), "spawn", body, seconds + 30)}
 
+    def music(self, action: str = "status", query: str = "", device: str = "auto", player: str = "") -> Any:
+        if device == "auto":
+            device = self.presence().get("active_device") or ""
+            if not device:
+                raise ValueError("she isn't active on any device right now, so name one")
+        body = {"action": action, "query": query, "player": player}
+        return {"device": device, **self.call(self.resolve(device, "music"), "music", body)}
+
     def mirror(self, text: str, event: Any = None) -> None:
         if not text or not self.options.mirror_proactive:
             return
@@ -186,7 +197,19 @@ def apply(ctx: Any, config: dict[str, Any]) -> None:
     )
     spawn_args = [arg("prompt"), device_arg, option("agent", default=""), option("cwd", default="")]
     ctx.mcp.tool("spawn", relay.spawn, help=spawn_help, args=spawn_args)
+    music_help = (
+        "See or control her music: status, play, pause, toggle, next, previous, stop, "
+        "volume (query is 0 to 1), find. play with a query starts that song"
+    )
+    music_args = [
+        option("action", default="status"),
+        option("query", default=""),
+        device_arg,
+        option("player", default=""),
+    ]
+    ctx.mcp.tool("music", relay.music, help=music_help, args=music_args)
     group = ctx.cli.group("relay", "Reach her other devices")
     group.command("look", relay.look, help=look_help, args=[device_arg])
     group.command("notify", relay.notify, help=notify_help, args=notify_args)
     group.command("spawn", relay.spawn, help=spawn_help, args=spawn_args)
+    group.command("music", relay.music, help=music_help, args=music_args)

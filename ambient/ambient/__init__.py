@@ -43,6 +43,8 @@ except ImportError:  # metrics stay off, events still work
 
 logger = logging.getLogger("dusha.ambient")
 
+MUSIC_NOW_HOURS = 0.5
+
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS observations (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -969,6 +971,12 @@ class Ambient:
             devices.setdefault(row["device"], {})[row["name"]] = row["value"]
         return [f"{device}: {_metrics_line(values)}" for device, values in sorted(devices.items())]
 
+    def music_now(self) -> list[str]:
+        latest: dict[str, dict[str, Any]] = {}
+        for item in self.recent(kind="music", hours=MUSIC_NOW_HOURS, limit=100):
+            latest.setdefault(item["device"], item)
+        return [f"{device}: {item['text']}" for device, item in sorted(latest.items())]
+
     def network_now(self) -> list[str]:
         latest: dict[str, dict[str, Any]] = {}
         for item in self.recent(kind="network", hours=self.options.context_hours, limit=100):
@@ -999,12 +1007,13 @@ class Ambient:
         events = [
             item
             for item in self.recent(hours=self.options.context_hours, limit=self.options.context_limit * 3)
-            if item["kind"] not in ("alert", "screen", "network")
+            if item["kind"] not in ("alert", "screen", "network", "music")
         ][: self.options.context_limit]
         screens = self.screen_rows(hours=self.options.context_hours, limit=6)
         metrics = self.metrics_now()
         network = self.network_now()
-        if not alerts and not events and not screens and not metrics and not network:
+        music = self.music_now()
+        if not alerts and not events and not screens and not metrics and not network and not music:
             return None
         data: dict[str, Any] = {}
         if alerts:
@@ -1013,6 +1022,8 @@ class Ambient:
             data["metrics_now"] = metrics
         if network:
             data["network_now"] = network
+        if music:
+            data["music_now"] = music
         if screens:
             latest = screens[-1]
             data["screen_now"] = f"{latest['at']} {latest['device']}: {latest['text']}"
