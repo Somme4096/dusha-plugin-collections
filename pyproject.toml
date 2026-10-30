@@ -6,13 +6,13 @@ requires-python = ">=3.11"
 dependencies = []
 
 [dependency-groups]
-dev = ["dusha>=1.1.21", "psutil>=5.9", "nvidia-ml-py>=12; sys_platform == 'linux'", "inotify_simple>=1.3; sys_platform == 'linux'", "watchdog>=4; sys_platform == 'darwin'", "Pillow>=10", "dbus-next>=0.2.3; sys_platform == 'linux'", "pytest>=8,<10", "pytest-asyncio>=0.24,<2", "ruff>=0.8,<1", "uvicorn>=0.30,<1"]
+dev = ["dusha>=1.1.21", "psutil>=5.9", "nvidia-ml-py>=12; sys_platform == 'linux'", "inotify_simple>=1.3; sys_platform == 'linux'", "watchdog>=4; sys_platform == 'darwin'", "Pillow>=10", "icalendar>=6", "recurring-ical-events>=3", "dbus-next>=0.2.3; sys_platform == 'linux'", "pytest>=8,<10", "pytest-asyncio>=0.24,<2", "ruff>=0.8,<1", "uvicorn>=0.30,<1"]
 
 [tool.uv]
 package = false
 
 [tool.pytest.ini_options]
-testpaths = ["presence/tests", "notification/tests", "relay/tests", "ambient/tests", "better_proactive/tests", "system_one/tests", "everos_memory/tests", "spawn/tests", "music/tests", "hands/tests", "voice/tests"]
+testpaths = ["presence/tests", "notification/tests", "relay/tests", "ambient/tests", "better_proactive/tests", "system_one/tests", "everos_memory/tests", "spawn/tests", "music/tests", "hands/tests", "voice/tests", "digest/tests", "inbox/tests", "focus/tests"]
 asyncio_mode = "auto"
 
 [tool.ruff]

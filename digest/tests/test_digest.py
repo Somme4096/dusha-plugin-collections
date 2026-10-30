@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import httpx
+from dusha.providers import parse
 
 from conftest import Server, completion, free_port, make_config, wait_for
 
@@ -18,7 +19,7 @@ def test_digest_summarizes_the_day_and_diary_files_it(tmp_path, plugins_dir, rec
             "digest": {"hour": 23, "provider": "fake", "model": "m"},
             "diary": {"vault": str(vault)},
         },
-        providers={"fake": {"base_url": model.url + "/v1", "timeout_seconds": 5}},
+        providers=parse({"fake": {"base_url": model.url + "/v1", "timeout_seconds": 5}}, environ=False),
     )
     with Server(config, free_port()) as hub:
         assert httpx.get(hub.url + "/state/v1/digest").status_code == 404

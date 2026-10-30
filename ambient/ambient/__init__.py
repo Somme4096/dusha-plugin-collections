@@ -26,6 +26,7 @@ from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 
 from . import browser as _browser
+from . import calendar as _calendar
 from . import containers as _containers
 from . import files as _files
 from . import gpu as _gpu
@@ -141,6 +142,7 @@ class Options:
     journal: dict[str, Any] | None = None
     containers: dict[str, Any] | None = None
     browser: dict[str, Any] | None = None
+    calendar: dict[str, Any] | None = None
     files: dict[str, Any] | None = None
     network: dict[str, Any] | None = None
 
@@ -179,6 +181,7 @@ SOURCE_KEYS = {
     "journal": _journal.KEYS,
     "containers": _containers.KEYS,
     "browser": _browser.KEYS,
+    "calendar": _calendar.KEYS,
     "files": _files.KEYS,
     "network": _network.KEYS,
 }
@@ -389,6 +392,7 @@ class Ambient:
             if not self.containers.runtimes:
                 logger.warning("ambient: the containers source found neither podman nor docker")
         self.browser = _browser.Browser(options.browser) if options.browser is not None else None
+        self.calendar = _calendar.Calendar(options.calendar) if options.calendar is not None else None
         self.files = _files.Files(options.files) if options.files is not None else None
         self.network = None
         if options.network is not None:
@@ -614,6 +618,14 @@ class Ambient:
                 self.open_alert(action.key, action.text, source, action.data, action.at)
             elif action.kind == "resolve":
                 self.resolve_alert(action.key, source, action.at)
+
+    def check_calendar(self) -> None:
+        stamp = time.time()
+        now = datetime.now().astimezone()
+        for event in self.calendar.check(now, stamp):
+            if self.seen("calendar", event.key, stamp) is None:
+                data = {"start": event.start.isoformat(), "end": event.end.isoformat()}
+                self.observe(Observation(source="calendar", text=event.text(), data=data))
 
     def check_browser(self) -> None:
         rows, state = self.browser.check(self.get_state("browser", {}), time.time())
@@ -1013,7 +1025,8 @@ class Ambient:
         metrics = self.metrics_now()
         network = self.network_now()
         music = self.music_now()
-        if not alerts and not events and not screens and not metrics and not network and not music:
+        meetings = self.calendar.on_now(datetime.now().astimezone()) if self.calendar else []
+        if not any((alerts, events, screens, metrics, network, music, meetings)):
             return None
         data: dict[str, Any] = {}
         if alerts:
@@ -1024,6 +1037,8 @@ class Ambient:
             data["network_now"] = network
         if music:
             data["music_now"] = music
+        if meetings:
+            data["calendar_now"] = meetings
         if screens:
             latest = screens[-1]
             data["screen_now"] = f"{latest['at']} {latest['device']}: {latest['text']}"
@@ -1056,6 +1071,8 @@ def apply(ctx: Any, config: dict[str, Any]) -> None:
         ctx.on("screenshot.look", lambda body=None: watch.look())
     if ambient.packages is not None:
         ctx.interval(options.packages.get("every_seconds", 3 * 3600), ambient.check_packages)
+    if ambient.calendar is not None:
+        ctx.interval(60, ambient.check_calendar)
     if ambient.browser is not None:
         ctx.interval(ambient.browser.every, ambient.check_browser)
     ambient.start_streams()
