@@ -1047,6 +1047,7 @@ def apply(ctx: Any, config: dict[str, Any]) -> None:
     ctx.on("proactive.candidates", ambient.candidates)
     ctx.on("context", ambient.context)
     ctx.interval(options.sample_seconds, ambient.sample)
+    ctx.on("ambient.screens", lambda hours=1, limit=200: ambient.screen_rows(hours, limit))
     ctx.on("ambient.timeline", lambda hours=3, max_chars=40000: ambient.timeline(hours, max_chars))
     if ambient.screen is not None:
         watch = ambient.screen

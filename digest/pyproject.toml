@@ -1,0 +1,13 @@
+[project]
+name = "dusha-digest"
+version = "0.1.0"
+description = "A daily summary of ambient and memos, kept, noted, and sent"
+requires-python = ">=3.11"
+dependencies = ["httpx>=0.27,<1"]
+
+[tool.uv]
+package = false
+
+[tool.dusha]
+entry = "digest"
+inject = ["memo", "settings", "providers", "api", "cli", "mcp"]

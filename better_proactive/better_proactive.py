@@ -102,6 +102,9 @@ def _candidate(item: Any, source: str) -> dict[str, Any] | None:
     }
 
 
+AWAY = ("she isn't at any device",)
+
+
 class BetterProactive(ProactiveEngine):
     def __init__(self, ctx: Any, extras: Extras, config: ProactiveConfig):
         super().__init__(ctx.database, config, ctx.settings.timezone, ctx.prompts, ctx.affect, ctx.companion)
@@ -371,10 +374,19 @@ class BetterProactive(ProactiveEngine):
 
     # Deliver.
 
+    def _hold(self, plan: dict[str, Any], current: datetime) -> None:
+        """Tell whoever listens what the gate stopped. Never from `plan`, which the webui polls."""
+        blocked = plan["blocked"]
+        for item in plan["candidates"] or (self.candidates(plan["state"], current) if blocked else []):
+            because = blocked or (item.get("skipped") if item.get("skipped") in AWAY else "")
+            if because and not item["needs_judge"] and item["score"] >= self.extras.min_score:
+                self.ctx.emit("proactive.held", {**item, "because": because})
+
     def evaluate(self, now: datetime | None = None) -> dict[str, Any] | None:
         current = now or utc_now()
         plan = self.plan(current)
         chosen, route, state = plan["chosen"], plan["route"], plan["state"]
+        self._hold(plan, current)
         if plan["blocked"] or chosen is None:
             return None
         payload = self._payload(chosen, route, state, current)

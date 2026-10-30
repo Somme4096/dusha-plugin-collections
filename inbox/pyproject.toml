@@ -1,0 +1,13 @@
+[project]
+name = "dusha-inbox"
+version = "0.1.0"
+description = "Lists what the companion wanted to say while it couldn't"
+requires-python = ">=3.11"
+dependencies = ["httpx>=0.27,<1"]
+
+[tool.uv]
+package = false
+
+[tool.dusha]
+entry = "inbox"
+inject = ["api", "cli", "mcp"]

@@ -26,6 +26,10 @@ PLUGINS = (
     "music",
     "hands",
     "voice",
+    "digest",
+    "diary",
+    "inbox",
+    "focus",
 )
 
 
