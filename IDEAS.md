@@ -83,15 +83,14 @@ Replaces the built-in `proactive`. Moves to dusha core once a few days of use pr
 
 ## Built on the foundations
 
-- **tui**: animated ASCII maid in the terminal. Mood from `ctx.affect` picks the animation, an SSE route feeds it, `dusha maid ...` commands and an MCP tool let the companion strike a pose.
-- **pet**: the maid gets hungry or sleepy based on how well you look after yourself. Breaks, late-night commits, sane end of day. Feeds affect `deltas` through `decide`. Needs presence and git.
+- **tui** (maid, built in its own session): animated ASCII maid in the terminal. Mood from `ctx.affect` picks the animation, an SSE route feeds it, `dusha maid ...` commands and an MCP tool let the companion strike a pose.
+- **pet** (maid, built in its own session): the maid gets hungry or sleepy based on how well you look after yourself. Breaks, late-night commits, sane end of day. Feeds affect `deltas` through `decide`. Needs presence and git.
 - **digest**: evening or morning summary of the day's ambient and memos, through notification.
 - **inbox**: `dusha inbox` and an MCP tool listing what the companion wanted to say while notifications were muted.
 - **voice**: local TTS (Piper or similar) for proactive messages, tone from the maid's mood.
 - **journal**: an `interval` job that turns the day into a memo and a shared diary entry in an Obsidian vault.
 - **focus**: time on one project and context switches, feeds affect `deltas` so mood follows your day, not only chat.
 - **hands**: MCP tools to control the computer (shell, input, windows), exposed through relay per device. The harness approves.
-- **playground**: the companion `explore`s the web on its own with a headless browser, keeps a log, and brings findings back as memos and "look what I found". Replaces the RSSHub feed whose X token keeps dying.
 
 ## Sensors (feed ambient)
 
@@ -380,3 +379,57 @@ Mostly tiny hooks that `curl` ambient, not plugins.
 - **packages:** `bootc status` needs root, so the OS image goes through `rpm-ostree status --json`. How long a reboot has been pending is counted from when ambient first saw it.
 - **files** (`source: "files"`, `kind: "file"`), agreed 2026-10-29: `~/Documents`, `~/Downloads`, `~/Desktop`, `~/Pictures` by default, and `roots` in config replaces them (`~/src` stays out unless listed). Created, downloaded (a `.part` or `.crdownload` renamed), modified, moved, and deleted, batched per folder per `window_minutes` (5). Up to `list_up_to` (5) changes are listed, more become counts. No deletion alert. Linux uses `inotify_simple` and skips excluded folders before watching them, so the default roots cost about 950 watches here instead of thousands. macOS uses `watchdog` over FSEvents. Modified means `CLOSE_WRITE`, once per save, and a temp file renamed over a file is a save. A file created and deleted inside one window leaves nothing.
 - **network:** DNS comes straight from resolved's varlink socket (`io.systemd.Resolve.Monitor`), because `resolvectl monitor` block-buffers into a pipe and `stdbuf` doesn't change that. resolved's `subscribe-query-results` is `auth_admin_keep` even for an active session, so ambient asks without interactive auth and DNS stays off with one log line unless a polkit rule allows the user. Asking interactively popped a password window per subscription. Answers map addresses back to sites, so connections show `github.com`, not an IP, once a lookup was seen. Lookups are counted per site per `window_minutes` (60) in one `kind: "network"` row, and only the latest one per device reaches context, as `network_now`. A site or listening port unseen for `new_after_days` (30) is an event after the first `learn_hours` (24). Ports from 32768 up are keyed by process only. macOS falls back to per-process connections, since `net_connections()` needs root there.
+
+### Second round (agreed 2026-10-30)
+
+tui and pet wait for the maid session. playground is dropped.
+
+**spawn** (device plugin, relay tool)
+
+- `spawn(prompt, device, agent, cwd)` is one call: it starts a configured ACP agent on the device, waits, and returns the answer. No read or poll tools.
+- The device plugin speaks ACP over stdio: `initialize`, `session/new`, `session/prompt`. Tool calls are listed in the result.
+- Agents are named in config as `{command, model?, cwd?}`, and `default` picks one. `opencode acp` is the reference agent.
+- The agent's permission requests are auto-approved, because the harness already gated the `spawn` call. A spawned agent has full run of that device.
+- A run past `timeout_seconds` is cancelled, killed, and returns what it had.
+
+**music** (own plugin, a source for ambient through `ambient.observe`)
+
+- Backends follow `packages/`: `mpris.py` over `busctl`, `macos.py` over `media-control`, `windows.py` over WinRT.
+- A track becomes a `music` row after it has played `min_listen_seconds` (30), so skipping doesn't log.
+- `control: true` advertises `music`, and relay gets `music(action, query, device, player)`. Off by default.
+- Named songs search `library` paths first, then the YouTube Music app's api-server. MPRIS has no search of its own.
+
+**hands** (device plugin, relay tools)
+
+- `shell`, `type_text`, `press_key`, `list_windows`, one tool per action. Each is advertised only if this machine has a way to do it. Spawn covers anything bigger.
+
+**voice** (device plugin, relay tool)
+
+- `speak(text, device, mood)` through piper, then `espeak-ng`, `say`, or SAPI on Windows, or a `command` of your own.
+- `moods` maps a feeling to a speed. relay can also speak the proactive mirror, passing the ruling feeling.
+
+**digest and diary**
+
+- digest runs on the hub at `hour`: the day's ambient and active memos, summarized by a provider model, or a plain count without one. It stores the text, adds a memo, notifies, and serves it at `/state/v1/digest`.
+- diary writes that text to a markdown file in an Obsidian vault. It runs where the vault lives, listening to `digest.ready` or fetching from a hub in `source`.
+
+**inbox** (hub plugin)
+
+- better_proactive emits `proactive.held` for each candidate the gate stops, with the reason, and notification's undelivered notices land there too. `dusha inbox` and an `inbox` MCP tool list them. Held reasons are not written messages, the model writes the words.
+
+**focus** (hub plugin)
+
+- Reads the ambient timeline's screen rows. Current streak and switches per hour go to a context block and a `focus` tool.
+- Answers `decide` with `deltas` from config, because dimension names belong to emotions.json.
+
+**calendar** (ambient source, opt-in)
+
+- `calendar: {sources: [path or URL]}`, parsed with optional `icalendar` and `recurring-ical-events`. Rows are written as events start, and `calendar_now` in context says what's on.
+
+**git**: a `post-checkout` hook next to `post-commit`.
+
+**Windows** (device, written without a Windows machine, unrun until the user's first pass)
+
+- presence through `GetLastInputInfo` and `OpenInputDesktop`, notification through PowerShell toasts, screen through `PIL.ImageGrab`, files through watchdog, browser paths under `%LOCALAPPDATA%` and `%APPDATA%`, a pending-reboot reader in the registry, music through WinRT.
+- journal and containers stay off.
+- `dusha proxy` needs `fcntl` out of `client/outbox.py` in dusha core.
