@@ -1,0 +1,13 @@
+[project]
+name = "dusha-spawn"
+version = "0.1.0"
+description = "Runs a configured ACP agent on this device for one prompt and returns its answer"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.uv]
+package = false
+
+[tool.dusha]
+entry = "spawn"
+inject = ["api", "cli"]

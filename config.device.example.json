@@ -58,6 +58,18 @@
         "files": {},
         "network": {}
       }
+    },
+    "spawn": {
+      "options": {
+        "agents": {
+          "opencode": {
+            "command": [
+              "opencode",
+              "acp"
+            ]
+          }
+        }
+      }
     }
   },
   "proxy": {

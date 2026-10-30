@@ -20,6 +20,7 @@ URGENCIES = ("low", "normal", "critical")
 CAPABILITIES = {
     "look": ("/state/v1/screenshot", "screenshot.look"),
     "notify": ("/state/v1/notification", "notification.send"),
+    "spawn": ("/state/v1/spawn", "spawn.run"),
 }
 
 
@@ -30,6 +31,7 @@ class Options:
     timeout_seconds: float = 60
     mirror_proactive: bool = True
     mirror_title: str = "dusha"
+    spawn_timeout_seconds: float = 1800
 
 
 def _ago(moment: str | None) -> str:
@@ -72,7 +74,7 @@ class Relay:
             raise ValueError(f"{device} can't {capability}, it offers: {offered}")
         return entry
 
-    def call(self, entry: dict[str, Any], capability: str, body: dict[str, Any]) -> Any:
+    def call(self, entry: dict[str, Any], capability: str, body: dict[str, Any], timeout: float = 0) -> Any:
         path, event = CAPABILITIES[capability]
         if entry.get("local"):
             answers = list(self.ctx.collect(event, body).values())
@@ -85,7 +87,10 @@ class Relay:
         headers = {"x-companion-token": token} if token else {}
         try:
             response = httpx.post(
-                entry["url"] + path, json=body, headers=headers, timeout=self.options.timeout_seconds
+                entry["url"] + path,
+                json=body,
+                headers=headers,
+                timeout=timeout or self.options.timeout_seconds,
             )
         except httpx.RequestError as error:
             raise ValueError(f"cannot reach {entry['device']} at {entry['url']}: {error}") from error
@@ -120,6 +125,17 @@ class Relay:
         if isinstance(result, dict) and not result.get("delivered"):
             raise ValueError(f"{device} couldn't show it: {result.get('errors') or 'no channel delivered'}")
         return result
+
+    def spawn(self, prompt: str, device: str = "auto", agent: str = "", cwd: str = "") -> Any:
+        if device == "auto":
+            snapshot = self.presence()
+            device = snapshot.get("active_device") or snapshot.get("last_active_device") or ""
+            if not device:
+                raise ValueError("no device has been active yet, so name one")
+        seconds = self.options.spawn_timeout_seconds
+        body = {"prompt": prompt, "agent": agent, "cwd": cwd, "timeout_seconds": seconds}
+        # The device enforces the limit and answers with what it has, so wait a little longer than it does.
+        return {"device": device, **self.call(self.resolve(device, "spawn"), "spawn", body, seconds + 30)}
 
     def mirror(self, text: str, event: Any = None) -> None:
         if not text or not self.options.mirror_proactive:
@@ -165,6 +181,12 @@ def apply(ctx: Any, config: dict[str, Any]) -> None:
         option("urgency", default="normal", choices=URGENCIES),
     ]
     ctx.mcp.tool("notify", relay.notify, help=notify_help, args=notify_args)
+    spawn_help = (
+        "Run a coding agent on one of her devices and wait for its answer, it has full run of that machine"
+    )
+    spawn_args = [arg("prompt"), device_arg, option("agent", default=""), option("cwd", default="")]
+    ctx.mcp.tool("spawn", relay.spawn, help=spawn_help, args=spawn_args)
     group = ctx.cli.group("relay", "Reach her other devices")
     group.command("look", relay.look, help=look_help, args=[device_arg])
     group.command("notify", relay.notify, help=notify_help, args=notify_args)
+    group.command("spawn", relay.spawn, help=spawn_help, args=spawn_args)

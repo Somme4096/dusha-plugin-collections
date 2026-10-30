@@ -12,7 +12,7 @@ dev = ["dusha>=1.1.21", "psutil>=5.9", "nvidia-ml-py>=12; sys_platform == 'linux
 package = false
 
 [tool.pytest.ini_options]
-testpaths = ["presence/tests", "notification/tests", "relay/tests", "ambient/tests", "better_proactive/tests", "system_one/tests", "everos_memory/tests"]
+testpaths = ["presence/tests", "notification/tests", "relay/tests", "ambient/tests", "better_proactive/tests", "system_one/tests", "everos_memory/tests", "spawn/tests"]
 asyncio_mode = "auto"
 
 [tool.ruff]

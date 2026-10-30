@@ -14,7 +14,16 @@ from dusha import api
 from dusha.config import BUILTIN_CONFIGS, AppConfig, ExternalPluginConfig
 
 ROOT = Path(__file__).resolve().parent
-PLUGINS = ("presence", "notification", "relay", "ambient", "better_proactive", "system_one", "everos_memory")
+PLUGINS = (
+    "presence",
+    "notification",
+    "relay",
+    "ambient",
+    "better_proactive",
+    "system_one",
+    "everos_memory",
+    "spawn",
+)
 
 
 @pytest.fixture(scope="session")
