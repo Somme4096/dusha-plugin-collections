@@ -36,7 +36,7 @@ async def test_what_the_gate_stopped_waits_in_the_inbox(tmp_path, plugins_dir, f
         items = (await http.get("/state/v1/inbox")).json()["items"]
         assert len(items) == 1
         assert "disk at 95%" in items[0]["text"]
-        assert items[0]["because"] == "she isn't at any device"
+        assert items[0]["because"] == "they aren't at any device"
         assert items[0]["source"] == "ambient"
 
         context = (await http.post("/state/v1/context", json={"query": "x"})).text

@@ -931,7 +931,7 @@ class Ambient:
             }
             for item in self.recent(kind="alert", hours=24, limit=20)
         ]
-        # Screen moments: no thresholds here. Every turn in how her work is going is offered,
+        # Screen moments: no thresholds here. Every turn in how their work is going is offered,
         # and only a judge (proactive.decide) can pick one. Without a judge they are never raised.
         before: dict[str, dict[str, Any]] = {}
         moments = []
@@ -1127,7 +1127,10 @@ def _tools(mcp: Any, ambient: Ambient) -> None:
     mcp.tool(
         "ambient_recent",
         lambda device="", source="", hours=6.0, limit=30: ambient.recent(device, source, "", hours, limit),
-        help="What happened recently across her devices: failed commands, commits, alerts, presence changes",
+        help=(
+            "What happened recently across their devices: failed commands, commits, alerts, "
+            "presence changes"
+        ),
         args=[
             option("device", default=""),
             option("source", default=""),

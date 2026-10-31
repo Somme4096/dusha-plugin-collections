@@ -34,11 +34,11 @@ KINDS = ("talk", "task")
 CLAIM = re.compile(r'<dusha_proactive event="([0-9a-f-]{36})"\s*/>')
 
 JUDGE_INSTRUCTIONS = (
-    "You decide whether her companion should reach out to her right now, and about what. Read the timeline "
-    "of what she has been doing, how she feels about the companion, and what was said recently. Pick the one "
-    "moment that is worth an interruption and that a caring friend would actually bring up now, or none. "
-    "Being quiet is often right: don't break deep focus for small things, but don't let her struggle alone "
-    "for long either."
+    "You decide whether their companion should reach out to them right now, and about what. Read the "
+    "timeline of what they have been doing, how they feel about the companion, and what was said "
+    "recently. Pick the one moment that is worth an interruption and that a caring friend would actually "
+    "bring up now, or none. Being quiet is often right: don't break deep focus for small things, but "
+    "don't let them struggle alone for long either."
 )
 KIND_INSTRUCTIONS = (
     "How to reach out. 'task' when the companion should first look into the problem with its tools and "
@@ -102,7 +102,7 @@ def _candidate(item: Any, source: str) -> dict[str, Any] | None:
     }
 
 
-AWAY = ("she isn't at any device",)
+AWAY = ("they aren't at any device",)
 
 
 class BetterProactive(ProactiveEngine):
@@ -115,7 +115,7 @@ class BetterProactive(ProactiveEngine):
     # Candidates.
 
     def _silence(self, state: dict[str, Any], current: datetime) -> list[dict[str, Any]]:
-        """The built-in reason: she's been quiet and a feeling crossed its trigger."""
+        """The built-in reason: they've been quiet and a feeling crossed its trigger."""
         if not state["last_user_message_at"]:
             return []
         silence = (current - parse_time(state["last_user_message_at"])).total_seconds() / 60
@@ -196,7 +196,7 @@ class BetterProactive(ProactiveEngine):
         if blocked is None and self._quiet(current):
             if not (self.extras.presence_overrides_quiet_hours and here):
                 blocked = "quiet hours"
-        # Away from every device: reach her where she still is, such as Discord on her phone.
+        # Away from every device: reach them where they still are, such as Discord on their phone.
         away = self._route(self.extras.away_target) if not here and self.extras.away_target else None
         route = away or self._route(self.extras.target)
         if blocked is None and not route:
@@ -290,7 +290,7 @@ class BetterProactive(ProactiveEngine):
             self.ctx.messages.recent(conversation_id=route["id"], limit=6), key=lambda row: row["id"]
         )
         last_user = state["last_user_message_at"]
-        criteria = {"none": "Stay quiet for now. Nothing here is worth interrupting her for."}
+        criteria = {"none": "Stay quiet for now. Nothing here is worth interrupting them for."}
         criteria.update({key: item["topic"] or item["reason"] for key, item in keys.items()})
         return {
             "state": {
@@ -363,13 +363,13 @@ class BetterProactive(ProactiveEngine):
         if item["score"] < self.extras.min_score:
             return "score below min_score"
         if item["requires_presence"] == "active" and not reachable:
-            return "she isn't at any device"
+            return "they aren't at any device"
         if (
             item["source"] != "silence"
             and since_user is not None
             and since_user < self.extras.min_gap_minutes
         ):
-            return "she talked just now"
+            return "they talked just now"
         return ""
 
     # Deliver.
@@ -429,7 +429,7 @@ class BetterProactive(ProactiveEngine):
         if chosen["kind"] == "task":
             todo = chosen["instruction"] or chosen["topic"]
             instruction += (
-                f"\nBefore you write, do this with your tools: {todo}\nThen tell her what you found."
+                f"\nBefore you write, do this with your tools: {todo}\nThen tell them what you found."
             )
         context = self.companion.build_context(
             query=chosen["topic"] or str(framing["context_query"]),

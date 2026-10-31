@@ -58,7 +58,8 @@ async def test_coming_back_is_delivered_through_the_old_queue_and_mirrored(
         assert (await http.post("/state/v1/proactive/evaluate")).json()["event"] is None
         [event] = (await http.get("/state/v1/proactive/events", params={"consumer": "bot"})).json()["events"]
         assert event["reason"] == "came_back" and event["source"] == "presence"
-        assert "Why you're reaching out now: She just came back to the nas" in event["generation_instruction"]
+        instruction = event["generation_instruction"]
+        assert "Why you're reaching out now: They just came back to the nas" in instruction
         assert event["target"] == {"harness": "discord", "conversation_id": "dm", "route": "discord-dm"}
         ack = await http.post(
             f"/state/v1/proactive/events/{event['id']}/ack",
@@ -66,7 +67,7 @@ async def test_coming_back_is_delivered_through_the_old_queue_and_mirrored(
         )
         assert ack.status_code == 200, ack.text
 
-        # relay mirrors the sent text to the device she's using, here this machine.
+        # relay mirrors the sent text to the device they're using, here this machine.
         await asyncio.to_thread(wait_for, lambda: fake_desktop[1].exists() and fake_desktop[1].read_text())
         assert fake_desktop[1].read_text() == "dusha|welcome back~\n"
         context = (
@@ -88,13 +89,13 @@ async def test_plan_explains_skips_and_alerts_wait_for_her(tmp_path, plugins_dir
         plan = (await http.post("/cli/v1/run/proactive/plan", json={})).json()
         [candidate] = plan["candidates"]
         assert candidate["reason"] == "ambient_alert"
-        assert candidate["skipped"] == "she isn't at any device"
+        assert candidate["skipped"] == "they aren't at any device"
         assert plan["chosen"] is None
 
         await _beat(http, "active", device="desktop")
         plan = (await http.post("/cli/v1/run/proactive/plan", json={})).json()
         alert = next(item for item in plan["candidates"] if item["reason"] == "ambient_alert")
-        assert alert["skipped"] == "she talked just now"
+        assert alert["skipped"] == "they talked just now"
 
 
 async def test_away_from_every_device_alerts_fall_back_to_the_away_target(tmp_path, plugins_dir, fake_desktop):

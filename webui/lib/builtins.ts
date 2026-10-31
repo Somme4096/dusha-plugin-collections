@@ -29,7 +29,7 @@ export const BUILTINS: Builtin[] = [
   },
   {
     name: "affect",
-    description: "A deterministic emotion engine. Values per dimension shift with each user message and drift while she's silent.",
+    description: "A deterministic emotion engine. Values per dimension shift with each user message and drift while they're silent.",
     tools: ["affect_status"],
     routes: ["GET /state/v1/affect"],
   },

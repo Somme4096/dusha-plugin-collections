@@ -10,11 +10,11 @@ See [IDEAS.md](IDEAS.md) for the design and every decision behind it.
 
 | Plugin | What it does |
 | --- | --- |
-| [presence](presence) | Is she active, idle, or locked, is each machine up, asleep, or gone. Devices send heartbeats to the hub, and the hub keeps the registry. |
+| [presence](presence) | Are they active, idle, or locked, is each machine up, asleep, or gone. Devices send heartbeats to the hub, and the hub keeps the registry. |
 | [relay](relay) | The hub's `look` and `notify` MCP tools for my other devices. Paired with presence. |
 | [notification](notification) | Desktop (`notify-send`, `osascript`) and phone (ntfy). Picks the channel from presence. |
 | [ambient](ambient) | Events and metrics from every device in one place: system journal, containers, packages, files, browser history, calendar, DNS and connections, GPU, commit histories, fish, screenshot, process monitoring. The rest over MCP and Prometheus text. |
-| [better_proactive](better_proactive) | Drop-in replacement for the built-in proactive plugin, with reasons from any plugin instead of only silence. A consumer that writes the message through its own agent sends the event's `claim_marker` in that turn, so dusha stores it as an event, not as her message (needs dusha's `claim` hook). (And yes, `poll`,`ack` and `eval` in the original plugin was a bad idea. This will be merged into Dusha later) |
+| [better_proactive](better_proactive) | Drop-in replacement for the built-in proactive plugin, with reasons from any plugin instead of only silence. A consumer that writes the message through its own agent sends the event's `claim_marker` in that turn, so dusha stores it as an event, not as the user's message (needs dusha's `claim` hook). (And yes, `poll`,`ack` and `eval` in the original plugin was a bad idea. This will be merged into Dusha later) |
 | [system_one](system_one) | Asks a SystemOne server for quick decisions: which emotion a user message moves (`decide`), and whether better_proactive should speak up and how (`proactive.decide`). |
 | [spawn](spawn) | Runs a configured [ACP](https://agentclientprotocol.com) agent on a device for one prompt and returns its answer. relay's `spawn` tool reaches it. The agent's permission requests are auto-approved, so it has full run of that device. |
 | [music](music) | What's playing on each device (MPRIS, `media-control`, or Windows media sessions) as an ambient source. With `control: true`, relay's `music` tool drives the player and plays songs by name from local folders or the YouTube Music app. |

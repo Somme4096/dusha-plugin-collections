@@ -1,4 +1,4 @@
-"""What's on her screen, as text for the timeline.
+"""What's on their screen, as text for the timeline.
 
 Capture, shrink, skip if unchanged, describe with a vision model.
 
@@ -29,14 +29,14 @@ STATUSES = ("focused", "stuck", "waiting", "communicating", "browsing", "leisure
 PROGRESS = ("new", "continued", "progressed", "switched")
 FIELDS = ("app", "title", "content", "activity", "status", "progress", "notable")
 
-PROMPT = f"""You watch her screen for a companion who lives on her computers.
+PROMPT = f"""You watch their screen for a companion who lives on their computers.
 Describe this screenshot as one JSON object with exactly these keys:
 
 - "app": the application in front, by its common name (VS Code, Chrome, Discord, Terminal).
 - "title": the window, tab, or document title as shown.
-- "content": 1 to 3 sentences on what is actually visible: the code or text she is looking at,
+- "content": 1 to 3 sentences on what is actually visible: the code or text they are looking at,
   the page's subject, who a chat is with and what about. Quote short error messages exactly.
-- "activity": what she is doing, as a short verb phrase ("debugging a failing pytest").
+- "activity": what they are doing, as a short verb phrase ("debugging a failing pytest").
 - "status": one of {", ".join(STATUSES)}. "stuck" means the same problem is still unsolved compared with the
   previous capture. "waiting" means a build, download, install, or spinner.
 - "progress": compared with the previous capture, one of {", ".join(PROGRESS)}. Use "new" when there is no

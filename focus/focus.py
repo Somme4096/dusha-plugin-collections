@@ -80,7 +80,7 @@ def apply(ctx: Any, config: dict[str, Any]) -> None:
     ctx.on("context", focus.context)
     ctx.on("decide", focus.decide)
     _routes(ctx.api, focus)
-    show_help = "See how focused she is right now: the app, the streak, and how often she switched"
+    show_help = "See how focused they are right now: the app, the streak, and how often they switched"
     ctx.mcp.tool("focus", focus.state, help=show_help)
     ctx.cli.group("focus", "Focus right now").command("show", focus.state, help=show_help)
 

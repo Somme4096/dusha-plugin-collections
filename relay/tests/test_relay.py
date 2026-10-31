@@ -64,7 +64,7 @@ def test_notify_and_look_through_the_hub(tmp_path, plugins_dir, fake_desktop, re
             assert result["delivered"] == ["phone"]
             assert ntfy.requests[-1]["body"]["title"] == "away"
 
-            # She sits down at the MacBook.
+            # They sit down at the MacBook.
             beat = {
                 **{k: devices(hub.url)["macbook"][k] for k in ("url", "capabilities")},
                 "device": "macbook",

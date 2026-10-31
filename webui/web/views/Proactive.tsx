@@ -68,13 +68,13 @@ function row(plan: Plan | null, affect: Affect | null, queued: boolean): { value
 // Synthetic plans for when nothing real is happening. Every one is labeled on screen.
 const SOURCES: Candidate[] = [
   { source: "silence", reason: "longing", topic: "", kind: "talk", score: 0.55, dedup_key: "", requires_presence: "" },
-  { source: "presence", reason: "came back", topic: "she's back on desktop after 3h away", kind: "talk", score: 0.6, dedup_key: "", requires_presence: "" },
+  { source: "presence", reason: "came back", topic: "they're back on desktop after 3h away", kind: "talk", score: 0.6, dedup_key: "", requires_presence: "" },
   { source: "ambient", reason: "alert", topic: "desktop: disk at 92%", kind: "talk", score: 0.5, dedup_key: "", requires_presence: "active" },
   { source: "ambient", reason: "alert", topic: "cargo build failing for an hour", kind: "task", score: 0.45, dedup_key: "", requires_presence: "active" },
   { source: "memo", reason: "loose end", topic: "ask how the overhang went", kind: "talk", score: 0.35, dedup_key: "", requires_presence: "" },
 ];
 const BLOCKS = ["cooling down", "quiet hours", WAITING, "daily cap reached", "too many unanswered messages"];
-const SKIPS = ["already raised", "she talked just now", "she isn't at any device", "score below min_score"];
+const SKIPS = ["already raised", "they talked just now", "they aren't at any device", "score below min_score"];
 
 function synthetic(step: number): Plan {
   const random = (n: number) => Math.abs(Math.sin(step * 12.9898 + n * 78.233) * 43758.5453) % 1;
@@ -302,7 +302,7 @@ export function Proactive({ initial }: { initial: string }) {
           <p class="empty">
             {plan?.blocked
               ? `The gate is shut (${plan.blocked}), so no plugin is asked for reasons.`
-              : "No plugin offers a reason right now. Presence offers one when she comes back after a long absence, and ambient offers one for each open alert."}
+              : "No plugin offers a reason right now. Presence offers one when they come back after a long absence, and ambient offers one for each open alert."}
           </p>
         )}
       </section>

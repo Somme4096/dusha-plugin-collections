@@ -45,7 +45,7 @@ refused.
 ## Proactive decisions
 
 The plugin also answers `proactive.decide`, a custom event the better_proactive plugin (from
-dusha-plugin-collections) fires before it queues a proactive message. The request carries a free-form `state` (a timeline of what she's doing, presence,
+dusha-plugin-collections) fires before it queues a proactive message. The request carries a free-form `state` (a timeline of what they're doing, presence,
 affect, recent messages) and typed `choice` questions, usually `speak` (one candidate moment, or `none`) and
 `kind` (`talk` or `task`). They go to the same `/v1/systemone` server in one request, and every answer must
 be one of its question's `criteria`. Without this plugin, better_proactive picks by score.

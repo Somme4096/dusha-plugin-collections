@@ -443,7 +443,7 @@ class Presence:
             {
                 "source": "presence",
                 "reason": "came_back",
-                "topic": f"She just came back to the {item['device']} "
+                "topic": f"They just came back to the {item['device']} "
                 f"after {_duration(item['away_minutes'])} "
                 f"({item['was']}).",
                 "score": 0.6,

@@ -106,10 +106,10 @@ def test_plain_text_answers_and_servers_without_json_mode(tmp_path, recorder, fa
         return completion("Reading a long article about bees\nIt has diagrams. Token: ghp_" + "x1Y2" * 9)
 
     vision = recorder(reply=reply)
-    prompts = {"plugins": {"ambient": {"screen": ["Say what she reads.", "Plain text is fine."]}}}
+    prompts = {"plugins": {"ambient": {"screen": ["Say what they read.", "Plain text is fine."]}}}
     ambient, _ = _watch(tmp_path, vision.url, fake_screen[0], prompts, key="override")
     result = ambient.screen.capture(force=True)
-    assert vision.requests[0]["body"]["messages"][0]["content"] == "Say what she reads.\nPlain text is fine."
+    assert vision.requests[0]["body"]["messages"][0]["content"] == "Say what they read.\nPlain text is fine."
     assert result["activity"] == "Reading a long article about bees"
     assert vision.requests[1]["headers"]["authorization"] == "Bearer override"
     assert "response_format" not in vision.requests[1]["body"]

@@ -112,7 +112,9 @@ class Relay:
         if device == "auto":
             device = self.presence().get("active_device") or ""
             if not device:
-                raise ValueError("she isn't active on any device right now, so there's no screen to look at")
+                raise ValueError(
+                    "they aren't active on any device right now, so there's no screen to look at"
+                )
         result = self.call(self.resolve(device, "look"), "look", {})
         return (
             {"device": device, **result} if isinstance(result, dict) else {"device": device, "result": result}
@@ -151,7 +153,7 @@ class Relay:
             return device
         active = self.presence().get("active_device") or ""
         if not active:
-            raise ValueError("she isn't active on any device right now, so name one")
+            raise ValueError("they aren't active on any device right now, so name one")
         return active
 
     def _act(self, device: str, capability: str, body: dict[str, Any], timeout: float = 0) -> Any:
@@ -211,11 +213,13 @@ def parse_options(raw: dict[str, Any]) -> Options:
 def apply(ctx: Any, config: dict[str, Any]) -> None:
     relay = Relay(ctx, parse_options(config))
     ctx.on("proactive.sent", relay.mirror)
-    device_arg = option("device", default="auto", help="Device name from presence, or auto for where she is")
-    look_help = "See what's on the screen of one of her devices, auto picks the one she is using"
+    device_arg = option(
+        "device", default="auto", help="Device name from presence, or auto for where they are"
+    )
+    look_help = "See what's on the screen of one of their devices, auto picks the one they are using"
     notify_help = (
-        "Show her a notification on one of her devices, auto picks the one she is using, "
-        "or her phone when she is away"
+        "Show them a notification on one of their devices, auto picks the one they are using, "
+        "or their phone when they are away"
     )
     ctx.mcp.tool("look", relay.look, help=look_help, args=[device_arg])
     notify_args = [
@@ -226,12 +230,12 @@ def apply(ctx: Any, config: dict[str, Any]) -> None:
     ]
     ctx.mcp.tool("notify", relay.notify, help=notify_help, args=notify_args)
     spawn_help = (
-        "Run a coding agent on one of her devices and wait for its answer, it has full run of that machine"
+        "Run a coding agent on one of their devices and wait for its answer, it has full run of that machine"
     )
     spawn_args = [arg("prompt"), device_arg, option("agent", default=""), option("cwd", default="")]
     ctx.mcp.tool("spawn", relay.spawn, help=spawn_help, args=spawn_args)
     music_help = (
-        "See or control her music: status, play, pause, toggle, next, previous, stop, "
+        "See or control their music: status, play, pause, toggle, next, previous, stop, "
         "volume (query is 0 to 1), find. play with a query starts that song"
     )
     music_args = [
@@ -245,7 +249,7 @@ def apply(ctx: Any, config: dict[str, Any]) -> None:
         (
             "shell",
             relay.shell,
-            "Run a shell command on one of her devices",
+            "Run a shell command on one of their devices",
             [
                 arg("command"),
                 device_arg,
@@ -253,19 +257,19 @@ def apply(ctx: Any, config: dict[str, Any]) -> None:
                 option("timeout_seconds", float, default=60),
             ],
         ),
-        ("type_text", relay.type_text, "Type text on one of her devices", [arg("text"), device_arg]),
-        ("press_key", relay.press_key, "Press a key on one of her devices", [arg("key"), device_arg]),
-        ("list_windows", relay.list_windows, "List open windows on one of her devices", [device_arg]),
+        ("type_text", relay.type_text, "Type text on one of their devices", [arg("text"), device_arg]),
+        ("press_key", relay.press_key, "Press a key on one of their devices", [arg("key"), device_arg]),
+        ("list_windows", relay.list_windows, "List open windows on one of their devices", [device_arg]),
         (
             "speak",
             relay.speak,
-            "Say something out loud on one of her devices",
+            "Say something out loud on one of their devices",
             [arg("text"), device_arg, option("mood", default="")],
         ),
     ]
     for name, handler, text, tool_args in hand_tools:
         ctx.mcp.tool(name, handler, help=text, args=tool_args)
-    group = ctx.cli.group("relay", "Reach her other devices")
+    group = ctx.cli.group("relay", "Reach their other devices")
     group.command("look", relay.look, help=look_help, args=[device_arg])
     group.command("notify", relay.notify, help=notify_help, args=notify_args)
     group.command("spawn", relay.spawn, help=spawn_help, args=spawn_args)

@@ -51,7 +51,7 @@ export function Presence() {
         <div>
           <h1>Presence</h1>
           <p>
-            Every machine that sends heartbeats here, and whether she's at it. The strip under each device fills from
+            Every machine that sends heartbeats here, and whether they're at it. The strip under each device fills from
             the right with one bit per reading while this page is open.
           </p>
         </div>
@@ -85,7 +85,7 @@ export function Presence() {
                   </span>
                   <span class="faint small">
                     {device.local ? "this server" : ""}
-                    {device.device === snapshot.data!.active_device ? " · she's here" : ""}
+                    {device.device === snapshot.data!.active_device ? " · they're here" : ""}
                   </span>
                 </h3>
                 <div class={`big ${tone(device.status)}-text`}>{device.status}</div>

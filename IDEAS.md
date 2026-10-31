@@ -70,7 +70,7 @@ Replaces the built-in `proactive`. Moves to dusha core once a few days of use pr
 - **Candidates (why)**: plugins offer reasons through `ctx.collect("proactive.candidates", now)` as `{reason, topic, score, context, dedup_key}`.
   - Today's silence and affect trigger is one source among many.
   - Others: presence ("came back after 3h away"), ambient ("build failing for an hour", "NAS disk at 92%"), memo, digest.
-  - A candidate can be a task ("look into X, then tell her"). The consumer's agent does the work with its own tools, and its harness gates it.
+  - A candidate can be a task ("look into X, then tell them"). The consumer's agent does the work with its own tools, and its harness gates it.
 - **Gate (whether now)**: presence (asleep, locked, away), quiet hours, cooldown, daily cap, unanswered cap. Falls back to today's clock rules without presence. Can answer `ctx.collect` for digest or voice later.
 - **Pick**: highest score, one pending event at a time.
 - **Deliver (where)**: the existing event queue. Options choose the consumer target instead of always `latest_route()`. Emits `proactive.sent(text, event)` after a `sent` ack, so the text can also show on the active device through relay.
@@ -104,7 +104,7 @@ Mostly tiny hooks that `curl` ambient, not plugins.
 
 - **Heartbeats over Tailscale `LastSeen` or hub polling.** Push works through NAT, doesn't depend on the transport, and carries state (`user`, `idle_s`, `capabilities`), so a beat is the presence update itself. Goodbyes separate asleep from unreachable. A long-lived connection would still need pings to catch half-open sockets. Tailscale status can be an extra signal, not the design.
 - **Own metrics over Netdata/Beszel/Glances.** Universal support, pairs with presence and relay, one MCP surface.
-- **No separate policy plugin.** Routing ("where do I reach her") is relay's `device: "auto"` backed by the presence registry. The gate ("may I interrupt now") lives in better-proactive until something else needs it.
+- **No separate policy plugin.** Routing ("where do I reach them") is relay's `device: "auto"` backed by the presence registry. The gate ("may I interrupt now") lives in better-proactive until something else needs it.
 
 ### Made while building the foundations (2026-10-28)
 
@@ -152,7 +152,7 @@ Mostly tiny hooks that `curl` ambient, not plugins.
 - `notify(device="auto")`: the active device's desktop, otherwise the phone through the hub's own notification. Naming a device lets that device decide.
 - Device auth: one `token` option for every device, with per-device overrides in `tokens`. Tokens are never sent in heartbeats, so they can't leak into the registry or the context.
 - `look` calls `/state/v1/screenshot` on the device. The screenshot plugin itself isn't built yet, so look currently answers "can't look".
-- Mirroring: after a proactive message is acked as sent, relay shows the text on the active device (`mirror_proactive`, title `mirror_title`). It skips mirroring when she's not at any device, because the consumer (Discord) already reaches the phone.
+- Mirroring: after a proactive message is acked as sent, relay shows the text on the active device (`mirror_proactive`, title `mirror_title`). It skips mirroring when they're not at any device, because the consumer (Discord) already reaches the phone.
 
 **ambient**
 
@@ -173,16 +173,16 @@ Mostly tiny hooks that `curl` ambient, not plugins.
 - Presence changes are recorded only where `forward_to` is unset (the hub), so they aren't duplicated.
 - Context gets open alerts, the last 2h of events (max 12), `metrics_now` with each device's latest values from the last 5 minutes, and `network_now` with each device's latest window cut to 3 sites and 3 talking processes. Agents ask `ambient_metrics` for history.
 - Prometheus text lives at `/state/v1/ambient/prometheus`, inside the authenticated router, so scrape it with the `x-companion-token` header.
-- Alerts become proactive candidates (score 0.5) with `requires_presence: "active"`, because "your disk is full" can wait until she's at a computer.
+- Alerts become proactive candidates (score 0.5) with `requires_presence: "active"`, because "your disk is full" can wait until they're at a computer.
 - Sensors in `ambient/hooks/`: a fish `fish_postexec` hook (failures except Ctrl-C, jobs of 5+ minutes) and a git `post-commit`, both using `curl` with JSON built through `python3`.
 
 **better_proactive**
 
 - Subclasses `dusha.proactive.ProactiveEngine` and reuses its queue, lease, ack, `on_message` cancellation, routes, and CLI unchanged, so consumers can't tell the difference. If the built-in is still on, it marks itself failed with a message saying to disable it, instead of crashing the gateway.
 - The built-in caps (`max_per_day`, `cooldown_minutes`, `max_unanswered`, one pending event) are a shared budget across all reasons. The example hub config raises `max_per_day` to 4 and lowers the cooldown to 120 minutes.
-- Quiet hours still apply, but presence overrides them when she's active on a device (`presence_overrides_quiet_hours`): awake at 2am means awake.
-- Silence keeps its own `min_silence_minutes`. Every other reason waits `min_gap_minutes` (10) after her last message, so it doesn't interrupt a live chat.
-- A reason is raised once, ever, per `dedup_key`, including events that were cancelled because she spoke first.
+- Quiet hours still apply, but presence overrides quiet hours when they're active on a device (`presence_overrides_quiet_hours`): awake at 2am means awake.
+- Silence keeps its own `min_silence_minutes`. Every other reason waits `min_gap_minutes` (10) after their last message, so it doesn't interrupt a live chat.
+- A reason is raised once, ever, per `dedup_key`, including events that were cancelled because they spoke first.
 - The silence candidate's score is 0.4 plus the ruling feeling's deviation.
 - Prompts: the generation instruction is the built-in one, plus "Why you're reaching out now: <topic>", plus for `task` candidates "Before you write, do this with your tools: ...". Context is built with the topic as the query.
 - Options: `target` (`"latest"` or `{harness, conversation_id}`) and `min_score`.
@@ -221,7 +221,7 @@ Mostly tiny hooks that `curl` ambient, not plugins.
   | `app` | The app in front. On macOS the OS's frontmost bundle overrides the model's guess. |
   | `title` | Window, tab, or document title. |
   | `content` | 1–3 sentences on what's visible, with short error text quoted as-is. |
-  | `activity` | What she's doing, as a verb phrase. |
+  | `activity` | What they're doing, as a verb phrase. |
   | `status` | `focused`, `stuck`, `waiting`, `communicating`, `browsing`, or `leisure`. |
   | `progress` | Compared with the previous capture: `new`, `continued`, `progressed`, or `switched`. |
   | `notable` | Optional: an error, a deadline, a message from a person. |
@@ -268,7 +268,7 @@ Mostly tiny hooks that `curl` ambient, not plugins.
   - `response_format: json_object` is sent first. A 400 means the server doesn't take it, so it's retried once without and remembered.
   - With an OS hint (macOS frontmost app), the hint overrides the model's `app`.
   - The ring buffer keeps 5 JPEGs by default (`keep_images`).
-  - `look` reuses the last description if it's younger than `every_seconds`, otherwise it captures fresh, even while she's idle.
+  - `look` reuses the last description if it's younger than `every_seconds`, otherwise it captures fresh, even while they're idle.
   - Timer ticks are skipped while presence says this device is idle or locked.
   - Every row emits `ambient.observed`, for the webui and for anything event-driven later.
 - **Candidates and the timeline:**
@@ -279,7 +279,7 @@ Mostly tiny hooks that `curl` ambient, not plugins.
   - The answer is cached against the exact set of candidates. Unchanged candidates aren't asked about again for `judge_recheck_minutes` (10), so "none" doesn't cost a call every minute.
   - The state holds:
     - the local time, the timeline (3h), each device's status, and the active device
-    - the ruling feeling, the last 6 messages of the target conversation, and minutes since she spoke
+    - the ruling feeling, the last 6 messages of the target conversation, and minutes since they spoke
     - today's budget, the unanswered count, and each candidate's details
   - better_proactive now injects `messages` for that.
   - The judge's `kind` overrides the candidate's. The payload carries `judged: true`.
@@ -311,7 +311,7 @@ Mostly tiny hooks that `curl` ambient, not plugins.
 - **Vision through vlm (`minicpm-v-4.6`, llama.cpp on the NAS, 4096 context):** about 4s per capture, valid JSON, but the descriptions are generic, sometimes wrong (titles), and it echoes the prompt's example phrases.
 - **SystemOne (`LiquidAI/d1-3B` on the NAS):** `proactive.decide` through system_one answered `c1/task` when stuck for 25 minutes and `none` in deep focus, the same in four runs, in 2–4s.
 - **Vision through opencode-go (`muse-spark-1.3-contributor`):** cheapest on Go, but Meta trains on its prompts and completions, so screenshots become training data. It also needs "Allow paid endpoints that train on request data". It works on `chat/completions` although the docs list `responses`. With `extra_body: {"reasoning_effort": "minimal"}` a synthetic screen took 3.1s and was described accurately. `none` and `thinking` are rejected, and the default spends about 980 tokens reasoning.
-- **Muse on real screens:** three captures took 4–7s each, named every pane, quoted her messages, and tracked `communicating`, `waiting`, then `continued`. Images go out unredacted, so anything visible (an open config.json with keys) reaches Meta. Only the stored text is redacted.
+- **Muse on real screens:** three captures took 4–7s each, named every pane, quoted their messages, and tracked `communicating`, `waiting`, then `continued`. Images go out unredacted, so anything visible (an open config.json with keys) reaches Meta. Only the stored text is redacted.
 
 ### More ambient sources (agreed 2026-10-29)
 

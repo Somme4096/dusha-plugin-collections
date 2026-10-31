@@ -97,7 +97,7 @@ def apply(ctx: Any, config: dict[str, Any]) -> None:
     ctx.on("context", inbox.context)
     ctx.on_dispose(inbox.close)
     _routes(ctx.api, inbox)
-    list_help = "List what you wanted to tell her while you couldn't reach her"
+    list_help = "List what you wanted to tell them while you couldn't reach them"
     every = option("everything", bool, default=False, help="Include what was already read")
     ctx.mcp.tool("inbox", inbox.list, help=list_help, args=[every])
     ctx.mcp.tool("inbox_clear", inbox.clear, help="Mark the inbox as read")

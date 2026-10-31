@@ -168,7 +168,7 @@ export function Overview() {
         at: time(affect.data.last_proactive_sent_at),
         source: "proactive",
         tag: "sent",
-        text: "reached out on her own",
+        text: "reached out on their own",
         detail: `${affect.data.unanswered_proactive} unanswered`,
         tone: "accent",
       });
@@ -186,7 +186,7 @@ export function Overview() {
         <p class="status">
           <span class={`dot ${store.online ? "ok live" : "bad"}`} />
           {store.online ? `${active} of ${loaded} plugins active` : "server unreachable"}
-          {presence.data?.active_device ? ` · she's on ${presence.data.active_device}` : ""}
+          {presence.data?.active_device ? ` · they're on ${presence.data.active_device}` : ""}
           {affect.data ? ` · last message ${ago(affect.data.last_user_message_at)}` : ""}
         </p>
       </header>
@@ -210,7 +210,7 @@ export function Overview() {
         <Reading
           label="devices"
           value={presence.data ? `${up}/${devices.length}` : "—"}
-          note={presence.data ? (presence.data.active_device ? `she's on ${presence.data.active_device}` : "she's away") : "presence is off"}
+          note={presence.data ? (presence.data.active_device ? `they're on ${presence.data.active_device}` : "they're away") : "presence is off"}
         />
         <Reading
           label="proactive"
@@ -235,7 +235,7 @@ export function Overview() {
                   <span class="faint">{clock(m.occurred_at)}</span>
                   <div>
                     <div class="who">
-                      <span class={m.role === "assistant" ? "accent-text" : ""}>{m.role === "assistant" ? name : m.role === "user" ? "her" : m.role}</span>
+                      <span class={m.role === "assistant" ? "accent-text" : ""}>{m.role === "assistant" ? name : m.role === "user" ? "them" : m.role}</span>
                       <span class="faint">
                         {m.harness} · {m.external_conversation_id}
                       </span>

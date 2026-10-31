@@ -208,7 +208,7 @@ _PROACTIVE_REQUEST = {
         "speak": {
             "type": "choice",
             "instructions": "Pick the one moment worth speaking up about, or none.",
-            "criteria": {"none": "Stay quiet", "c1": "She has been stuck on a failing test"},
+            "criteria": {"none": "Stay quiet", "c1": "They have been stuck on a failing test"},
         },
         "kind": {"type": "choice", "instructions": "How", "criteria": {"talk": "Talk", "task": "Help first"}},
     },
