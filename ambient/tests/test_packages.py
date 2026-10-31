@@ -57,6 +57,26 @@ async def test_package_updates_are_metrics_and_events_only_on_change(tmp_path, p
     assert "pkg.reboot_pending" not in readings
 
 
+async def test_apt_and_mise_are_read_from_local_state(tmp_path, plugins_dir, monkeypatch):
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    apt, mise = tmp_path / "apt.txt", tmp_path / "mise.json"
+    apt.write_text(
+        "Listing...\n"
+        "curl/stable-security 8.14.1-2+deb13u7 amd64 [upgradable from: 8.14.1-2+deb13u5]\n"
+        "gh/trixie 2.103.2 amd64 [upgradable from: 2.102.0]\n"
+    )
+    mise.write_text(json.dumps({"node": {"name": "node", "current": "20.0.0", "latest": "20.1.0"}}))
+    _fake(bin_dir, "apt", apt)
+    _fake(bin_dir, "mise", mise)
+    monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ['PATH']}")
+    options = {"device": "desktop", "packages": {"backends": ["apt", "mise"], "every_seconds": 1}}
+    config = make_config(tmp_path / "data", plugins_dir, {"ambient": options})
+    async with client(config) as http:
+        texts = await _until(http, "packages", 2)
+    assert sorted(texts) == ["apt: 2 updates (curl, gh)", "mise: 1 updates (node)"]
+
+
 @pytest.mark.skipif(not os.path.exists("/run/ostree-booted"), reason="needs an rpm-ostree host")
 async def test_a_staged_deployment_is_reported_once_and_counted_in_days(tmp_path, plugins_dir, monkeypatch):
     bin_dir = tmp_path / "bin"

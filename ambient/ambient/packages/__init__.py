@@ -6,16 +6,18 @@ import logging
 import subprocess
 from typing import Any
 
-from . import brew, flatpak, macos, rpm_ostree, windows
+from . import apt, brew, flatpak, macos, mise, rpm_ostree, windows
 from .base import Backend
 
 logger = logging.getLogger("dusha.ambient")
 
 BACKENDS: list[Backend] = [
     rpm_ostree.RpmOstree(),
+    apt.Apt(),
     flatpak.Flatpak("system"),
     flatpak.Flatpak("user"),
     brew.Brew(),
+    mise.Mise(),
     macos.SoftwareUpdate(),
     windows.WindowsUpdate(),
 ]
