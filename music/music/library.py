@@ -29,3 +29,21 @@ def search(roots: list[str], query: str, limit: int = 5) -> list[Path]:
                     # Words in the file name beat words only in its folders.
                     found.append((-len(wanted & _words(path.stem)), len(str(path)), path))
     return [item[2] for item in sorted(found)[:limit]]
+
+
+def albums(roots: list[str], query: str, limit: int = 5) -> list[Path]:
+    wanted = _words(query)
+    if not wanted:
+        return []
+    found: list[tuple[int, str, Path]] = []
+    for root in roots:
+        base = os.path.expanduser(root)
+        for folder, _, names in os.walk(base):
+            path = Path(folder)
+            if str(path) == str(Path(base)):
+                continue
+            if not any(Path(name).suffix.casefold() in AUDIO for name in names):
+                continue
+            if wanted <= _words(str(path.relative_to(base))):
+                found.append((-len(wanted & _words(path.name)), str(path), path))
+    return [item[2] for item in sorted(found)[:limit]]

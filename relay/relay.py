@@ -236,7 +236,8 @@ def apply(ctx: Any, config: dict[str, Any]) -> None:
     ctx.mcp.tool("spawn", relay.spawn, help=spawn_help, args=spawn_args)
     music_help = (
         "See or control their music: status, play, pause, toggle, next, previous, stop, "
-        "volume (query is 0 to 1), find. play with a query starts that song"
+        "volume (query is 0 to 1), find, album. play with a query starts that song, "
+        "album with a query plays that album folder"
     )
     music_args = [
         option("action", default="status"),

@@ -19,7 +19,7 @@ from .base import ACTIONS, Backend, Player
 logger = logging.getLogger("dusha.music")
 
 BACKENDS: list[Backend] = [mpris.Mpris(), macos.MediaControl(), windows.Winrt()]
-VERBS = (*ACTIONS, "status", "find", "volume")
+VERBS = (*ACTIONS, "status", "find", "volume", "album")
 
 
 class Control(BaseModel):
@@ -121,6 +121,10 @@ class Music:
             return {"players": [item.public() for item in self.players()]}
         if action == "find":
             return {"local": [str(path) for path in library.search(self.options.library, query)]}
+        if action == "album":
+            if not query:
+                raise ValueError("album needs a name in query")
+            return self._album(query, player)
         if action == "play" and query:
             return self._song(query, player)
         chosen = self.target(player)
@@ -133,6 +137,14 @@ class Music:
         else:
             self.backend.command(chosen.id, action)
         return {"player": chosen.name, "done": action}
+
+    def _album(self, query: str, player: str) -> dict[str, Any]:
+        found = library.albums(self.options.library, query, 1)
+        if not found:
+            raise ValueError(f"no album folder matches {query!r}")
+        folder = found[0]
+        self._local(folder.as_uri() + "/", str(folder), player)
+        return {"source": "local", "album": folder.name}
 
     def _song(self, query: str, player: str) -> dict[str, Any]:
         found = library.search(self.options.library, query, 1)

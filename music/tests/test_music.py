@@ -188,7 +188,17 @@ def test_a_track_reaches_ambient_and_the_hub_controls_the_player(tmp_path, plugi
         assert not error, result
         error, result = mcp(hub.url, "music", action="play", query="local rain", device="desk")
         assert not error and result["source"] == "local"
-        assert player.read_text().splitlines() == ["next", "volume 0.4", f"open {song.as_uri()}"]
+        error, result = mcp(hub.url, "music", action="album", query="tester", device="desk")
+        assert not error, result
+        assert result == {"device": "desk", "source": "local", "album": "Tester"}
+        error, result = mcp(hub.url, "music", action="album", query="nothing here", device="desk")
+        assert error and "no album folder matches" in result["detail"]
+        assert player.read_text().splitlines() == [
+            "next",
+            "volume 0.4",
+            f"open {song.as_uri()}",
+            f"open {songs.as_uri()}/",
+        ]
 
         error, result = mcp(hub.url, "music", action="play", query="found song", device="desk")
         assert not error and result == {"device": "desk", "source": "youtube_music", "song": "Found Song"}
