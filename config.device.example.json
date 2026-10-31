@@ -94,7 +94,9 @@
     },
     "voice": {
       "options": {
-        "moods": {}
+        "base_url": "http://nas:8088/v1",
+        "api_key": "change-me-tts-token",
+        "voice": "default"
       }
     },
     "diary": {

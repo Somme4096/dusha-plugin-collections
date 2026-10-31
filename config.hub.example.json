@@ -26,7 +26,18 @@
     },
     "relay": {
       "options": {
-        "token": "change-me-device-token"
+        "token": "change-me-device-token",
+        "speak_order": [
+          "presence",
+          "discord"
+        ]
+      }
+    },
+    "voice": {
+      "options": {
+        "base_url": "http://127.0.0.1:8088/v1",
+        "api_key": "change-me-tts-token",
+        "voice": "default"
       }
     },
     "ambient": {

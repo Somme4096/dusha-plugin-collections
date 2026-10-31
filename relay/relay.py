@@ -7,9 +7,11 @@ import threading
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import httpx
 from dusha.commands import arg, option
+from dusha.hooks import render
 from dusha.timeutil import parse_time, utc_now
 
 logger = logging.getLogger("dusha.relay")
@@ -27,7 +29,16 @@ CAPABILITIES = {
     "key": ("/state/v1/hands/key", "hands.key"),
     "windows": ("/state/v1/hands/windows", "hands.windows"),
     "speak": ("/state/v1/voice", "voice.speak"),
+    "upload": ("/state/v1/voice/outbox", "voice.queue"),
 }
+SPEAK_ROUTES = ("presence", "discord")
+DISCORD_PREFIX = "discord:"
+SPEAK_HELP = (
+    "Say something out loud in your own voice. Use it whenever they ask to hear your voice, "
+    "and when you are comforting them. auto plays on the device they are using, or sends a voice clip "
+    "to their chat when they are away. Put emoji in the text for delivery, see the irodori-emoji skill. "
+    "Match the hour in <local_time>: whisper 👂 late at night, sound sleepy 😪 in the early morning."
+)
 
 
 @dataclass
@@ -39,6 +50,10 @@ class Options:
     mirror_title: str = "dusha"
     spawn_timeout_seconds: float = 1800
     mirror_voice: bool = False
+    speak_order: list[str] = field(default_factory=lambda: list(SPEAK_ROUTES))
+    speak_route: str = ""
+    speak_timeout_seconds: float = 180
+    speak_help: str = SPEAK_HELP
 
 
 def _ago(moment: str | None) -> str:
@@ -173,8 +188,32 @@ class Relay:
     def list_windows(self, device: str = "auto") -> Any:
         return self._act(device, "windows", {})
 
-    def speak(self, text: str, device: str = "auto", mood: str = "") -> Any:
-        return self._act(device, "speak", {"text": text, "mood": mood})
+    def _speak_on(self, text: str, device: str) -> Any:
+        return self._act(device, "speak", {"text": text}, self.options.speak_timeout_seconds)
+
+    def _speak_to_chat(self, text: str) -> Any:
+        route = self.options.speak_route or (self.ctx.companion.latest_route() or {}).get("route", "")
+        if not route.startswith(DISCORD_PREFIX):
+            raise ValueError(f"the latest chat is not on Discord: {route!r}")
+        entry = {"device": "this machine", "local": True}
+        return self.call(entry, "upload", {"text": text, "route": route})
+
+    def speak(self, text: str, device: str = "auto") -> Any:
+        if device != "auto":
+            return {"via": "presence", **self._speak_on(text, device)}
+        failures = []
+        for way in self.options.speak_order:
+            try:
+                sent = self._speak_on(text, "auto") if way == "presence" else self._speak_to_chat(text)
+            except ValueError as error:
+                failures.append(f"{way}: {error}")
+                continue
+            return {"via": way, **sent}
+        raise ValueError(f"nowhere to speak, {', '.join(failures) or 'speak_order is empty'}")
+
+    def clock(self, request: Any) -> Any:
+        local = datetime.now(ZoneInfo(self.ctx.settings.timezone))
+        return render("relay", "<local_time>", f"{local:%A %H:%M}", "</local_time>")
 
     def music(self, action: str = "status", query: str = "", device: str = "auto", player: str = "") -> Any:
         body = {"action": action, "query": query, "player": player}
@@ -194,8 +233,7 @@ class Relay:
             try:
                 self.notify(self.options.mirror_title, text, device=active)
                 if self.options.mirror_voice:
-                    feeling = (event or {}).get("ruling_feeling") or {}
-                    self.speak(text, active, str(feeling.get("dimension") or ""))
+                    self.speak(text, active)
             except ValueError as error:
                 logger.info("relay could not mirror a proactive message to %s: %s", active, error)
 
@@ -207,12 +245,17 @@ def parse_options(raw: dict[str, Any]) -> Options:
     unknown = sorted(set(raw) - set(Options.__dataclass_fields__))
     if unknown:
         raise ValueError(f"unknown relay option(s): {unknown}")
-    return Options(**raw)
+    options = Options(**raw)
+    wrong = sorted(set(options.speak_order) - set(SPEAK_ROUTES))
+    if wrong:
+        raise ValueError(f"unknown speak_order route(s): {wrong}, use {list(SPEAK_ROUTES)}")
+    return options
 
 
 def apply(ctx: Any, config: dict[str, Any]) -> None:
     relay = Relay(ctx, parse_options(config))
     ctx.on("proactive.sent", relay.mirror)
+    ctx.on("context", relay.clock)
     device_arg = option(
         "device", default="auto", help="Device name from presence, or auto for where they are"
     )
@@ -264,8 +307,8 @@ def apply(ctx: Any, config: dict[str, Any]) -> None:
         (
             "speak",
             relay.speak,
-            "Say something out loud on one of their devices",
-            [arg("text"), device_arg, option("mood", default="")],
+            relay.options.speak_help,
+            [arg("text"), device_arg],
         ),
     ]
     for name, handler, text, tool_args in hand_tools:

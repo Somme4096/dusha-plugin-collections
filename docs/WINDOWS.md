@@ -43,7 +43,7 @@ A Windows machine runs as a device, like the MacBook. The hub stays on the NAS.
 | ambient network | Per-process connections. No DNS. |
 | music | Windows media sessions. No per-player volume. Local songs open in the default player. |
 | hands | `cmd` for `shell`, `SendKeys` for input, process titles for windows. Keys use SendKeys syntax, such as `{ENTER}`. |
-| voice | SAPI, or piper if `piper_model` is set. |
+| voice | `Media.SoundPlayer`, so keep `response_format` at `wav`, or set `player`. |
 | spawn | Any ACP agent on `PATH`. |
 
 The journal and container sources stay off.

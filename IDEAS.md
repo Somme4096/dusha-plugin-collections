@@ -405,8 +405,8 @@ tui and pet wait for the maid session. playground is dropped.
 
 **voice** (device plugin, relay tool)
 
-- `speak(text, device, mood)` through piper, then `espeak-ng`, `say`, or SAPI on Windows, or a `command` of your own.
-- `moods` maps a feeling to a speed. relay can also speak the proactive mirror, passing the ruling feeling.
+- `speak(text, device)` through an OpenAI-compatible TTS server, with Irodori emoji in the text for delivery.
+- `speak_order` tries the active device, then a clip dusha-acp-worker uploads to Discord. relay can also speak the proactive mirror.
 
 **digest and diary**
 

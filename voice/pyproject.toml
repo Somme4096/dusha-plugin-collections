@@ -1,9 +1,9 @@
 [project]
 name = "dusha-voice"
 version = "0.1.0"
-description = "Speaks text aloud on this device, with a speed per mood"
+description = "Speaks through an OpenAI-compatible TTS server, on this device or as a clip for a chat worker"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = ["httpx"]
 
 [tool.uv]
 package = false

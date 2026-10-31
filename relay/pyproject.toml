@@ -10,4 +10,4 @@ package = false
 
 [tool.dusha]
 entry = "relay"
-inject = ["cli", "mcp"]
+inject = ["companion", "settings", "cli", "mcp"]
