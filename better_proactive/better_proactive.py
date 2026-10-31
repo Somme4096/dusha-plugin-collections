@@ -351,7 +351,8 @@ class BetterProactive(ProactiveEngine):
         marks = ",".join("?" * len(keys))
         with self.database.connect() as db:
             rows = db.execute(
-                f"SELECT dedup_key FROM proactive_events WHERE dedup_key IN ({marks})", tuple(keys)
+                f"SELECT dedup_key FROM proactive_events WHERE dedup_key IN ({marks}) AND status != 'cancelled'",
+                tuple(keys),
             )
             return {row["dedup_key"] for row in rows}
 
@@ -392,6 +393,11 @@ class BetterProactive(ProactiveEngine):
         payload = self._payload(chosen, route, state, current)
         try:
             with self.database.connect() as db:
+                # dedup_key is UNIQUE, so a cancelled attempt gives its key up to the new one.
+                db.execute(
+                    "UPDATE proactive_events SET dedup_key=dedup_key||':'||id WHERE dedup_key=? AND status='cancelled'",
+                    (chosen["dedup_key"],),
+                )
                 db.execute(
                     """INSERT INTO proactive_events
                        (id, conversation_id, route, reason, dedup_key, payload_json,

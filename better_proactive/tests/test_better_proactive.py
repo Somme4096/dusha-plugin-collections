@@ -98,6 +98,22 @@ async def test_plan_explains_skips_and_alerts_wait_for_her(tmp_path, plugins_dir
         assert alert["skipped"] == "they talked just now"
 
 
+async def test_a_candidate_cancelled_by_her_message_is_raised_again(tmp_path, plugins_dir, fake_desktop):
+    config = make_config(tmp_path / "data", plugins_dir, _stack(fake_desktop))
+    async with client(config) as http:
+        await _say(http)
+        await _beat(http, "active", device="desktop")
+        await http.post(
+            "/state/v1/ambient",
+            json={"source": "ambient", "kind": "alert", "device": "desktop", "text": "disk ~ at 95%"},
+        )
+        await http.post("/state/v1/proactive/evaluate")
+        await _say(http, "still here")
+        await http.post("/state/v1/proactive/evaluate")
+        [event] = (await http.get("/state/v1/proactive/events", params={"consumer": "bot"})).json()["events"]
+    assert event["reason"] == "ambient_alert"
+
+
 async def test_away_from_every_device_alerts_fall_back_to_the_away_target(tmp_path, plugins_dir, fake_desktop):
     stack = _stack(fake_desktop, away_target={"harness": "discord"})
     config = make_config(tmp_path / "data", plugins_dir, stack)
