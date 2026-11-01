@@ -447,8 +447,8 @@ tui is built as [maid](maid), see below. pet waits for the maid session. playgro
 
 ### maid (agreed 2026-11-01)
 
-- `dusha maid show` draws her in the terminal: 92 by 50 cells of half-blocks, square pixels, five greys from the 256-colour ramp, transparent background. Mono beat 1-bit dither, which lost the face, and pure ASCII, which turned the lines to noise. A pane smaller than that crops her.
+- `maid/tui.py` draws her in the terminal: 92 by 50 cells of half-blocks, square pixels, five greys from the 256-colour ramp, transparent background. Mono beat 1-bit dither, which lost the face, and pure ASCII, which turned the lines to noise. A pane smaller than that crops her.
 - Three motions: breathing always, blinking when something happens, sleeping with closed eyes. Mood from `ctx.affect` and poses wait.
 - The art came from the reference through ComfyUI: lineart ControlNet and `illustrious_flat_color_v2` on WAI-Illustrious, then an inpaint for the closed eyes, so both frames stay aligned. `maid/art/bake.py` turns them into `sprite.json`.
 - A blink means `message`, `context`, `proactive.sent`, or the blink route, tool, and command. Tool calls have no event in dusha, so a harness posts the route itself.
-- Plugin commands run on the server, so `show` needs dusha's `terminal=True`: the handler yields terminal output, the CLI writes it to the alternate screen until Ctrl-C. The drawing stays in the plugin and works against a remote hub. The size is read once at the start.
+- `dusha maid ...` runs on the server, so it can't draw, and a core change for that was too much. `maid/tui.py` is a separate stdlib client that follows the SSE route and needs no dusha install. She sleeps whenever the hub can't be reached.

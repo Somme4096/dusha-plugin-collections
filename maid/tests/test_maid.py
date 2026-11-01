@@ -20,7 +20,6 @@ import httpx
 from conftest import Server, free_port, make_config, wait_for
 
 ROOT = Path(__file__).resolve().parent.parent
-DUSHA = Path(sys.executable).with_name("dusha")
 MESSAGE = {"harness": "discord", "conversation_id": "dm", "role": "user", "content": "hi", "route": "dm"}
 LINES = 60
 COLUMNS = 110
@@ -28,7 +27,7 @@ EYES = 24
 
 
 def plugin():
-    spec = importlib.util.spec_from_file_location("maid_drawing", ROOT / "maid.py")
+    spec = importlib.util.spec_from_file_location("maid_drawing", ROOT / "tui.py")
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
@@ -44,15 +43,18 @@ def faces(closed: bool) -> list[bytes]:
 
 
 class Terminal:
-    """The real `dusha maid show` on a pty, collecting everything it paints."""
+    """tui.py on a real pty, collecting everything it paints."""
 
-    def __init__(self, home: Path, url: str):
-        (home / "config.json").write_text(json.dumps({"proxy": {"server": {"url": url, "token": ""}}}))
+    def __init__(self, url: str):
         self.master, slave = pty.openpty()
         fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack("HHHH", LINES, COLUMNS, 0, 0))
-        env = {**os.environ, "COLUMNS": str(COLUMNS), "LINES": str(LINES), "DUSHA_HOME": str(home)}
+        env = {**os.environ, "COLUMNS": str(COLUMNS), "LINES": str(LINES)}
         self.process = subprocess.Popen(
-            [str(DUSHA), "maid", "show"], stdin=slave, stdout=slave, stderr=subprocess.PIPE, env=env
+            [sys.executable, str(ROOT / "tui.py"), "--url", url],
+            stdin=slave,
+            stdout=slave,
+            stderr=subprocess.PIPE,
+            env=env,
         )
         os.close(slave)
         self.painted = b""
@@ -74,13 +76,11 @@ class Terminal:
         wait_for(lambda: b"\x1b[?25h\x1b[?1049l" in self.painted)
 
 
-def test_dusha_maid_show_breathes_blinks_and_sleeps(tmp_path, plugins_dir):
+def test_the_terminal_breathes_blinks_and_sleeps(tmp_path, plugins_dir):
     open_eyes, closed_eyes = faces(False), faces(True)
-    home = tmp_path / "home"
-    home.mkdir()
     config = make_config(tmp_path / "data", plugins_dir, {"proactive": False, "maid": {}})
     with Server(config, free_port()) as server, httpx.Client(base_url=server.url) as http:
-        terminal = Terminal(home, server.url)
+        terminal = Terminal(server.url)
         try:
             wait_for(lambda: terminal.since(0, open_eyes[:1]), timeout=10)
             assert "▀".encode() in terminal.painted and b"38;5;" in terminal.painted
@@ -123,3 +123,11 @@ def test_she_falls_asleep_after_quiet_and_blinks_by_tool(tmp_path, plugins_dir):
         }
         assert http.post("/mcp", json=tool).status_code == 200
         assert http.get("/state/v1/maid").json()["blinks"] == 1
+
+
+def test_she_sleeps_when_the_hub_is_gone():
+    terminal = Terminal(f"http://127.0.0.1:{free_port()}")
+    try:
+        wait_for(lambda: terminal.since(0, faces(True)), timeout=10)
+    finally:
+        terminal.leave()
