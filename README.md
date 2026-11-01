@@ -24,7 +24,7 @@ See [IDEAS.md](IDEAS.md) for the design and every decision behind it.
 | [diary](diary) | Writes each digest into an Obsidian vault, on the machine where the vault lives. |
 | [inbox](inbox) | What better_proactive held back and notices nothing could deliver. |
 | [focus](focus) | Time on one app and context switches from screen rows, as context, a tool, and mood `deltas`. |
-| [maid](maid) | The maid in a terminal, 40 cells wide in truecolor half-blocks. She breathes, blinks on messages, context requests, proactive messages, and `POST /state/v1/maid/blink`, and sleeps after `sleep_after_minutes` (30) of quiet. Run `python maid/tui.py --url http://hub:8765 --token ...`, or set `DUSHA_URL` and `DUSHA_TOKEN`. It needs only Python. |
+| [maid](maid) | `dusha maid show` draws the maid in your terminal, about 100 columns by 50 rows in monochrome half-blocks. She breathes, blinks on messages, context requests, proactive messages, and `POST /state/v1/maid/blink`, and sleeps after `sleep_after_minutes` (30) of quiet. Needs dusha's `terminal` commands. |
 | [everos_memory](everos_memory) | Mirrors conversations into an [EverOS](https://github.com/EverMind-AI/EverOS) sidecar, injects recalled episodes into the context, and moves affect through `decide`. |
 
 ## WebUI
