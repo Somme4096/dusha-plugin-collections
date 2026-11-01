@@ -382,7 +382,7 @@ Mostly tiny hooks that `curl` ambient, not plugins.
 
 ### Second round (agreed 2026-10-30)
 
-tui and pet wait for the maid session. playground is dropped.
+tui is built as [maid](maid), see below. pet waits for the maid session. playground is dropped.
 
 **spawn** (device plugin, relay tool)
 
@@ -445,3 +445,10 @@ tui and pet wait for the maid session. playground is dropped.
 - **inbox:** `proactive.held` fires from `evaluate` only, so polling `plan` stays free of side effects. Rows dedupe on `dedup_key`.
 - **Windows:** `dusha proxy` needs the `fcntl` fix in dusha's `client/outbox.py`, left uncommitted in `../dusha` for review. The guide lives in `docs/WINDOWS.md`.
 
+### maid (agreed 2026-11-01)
+
+- Terminal only, 40 by 24 cells of truecolor half-blocks (40 by 48 pixels), about 1:1.2 for half a pane. The background stays transparent.
+- Three motions: breathing always, blinking when something happens, sleeping with closed eyes. Mood from `ctx.affect` and poses wait.
+- The art came from the reference through ComfyUI: lineart ControlNet and `illustrious_flat_color_v2` on WAI-Illustrious, then an inpaint for the closed eyes, so both frames stay aligned. `maid/art/bake.py` turns them into `sprite.json`. The open eyes are placed by hand there, nothing else survives at this size.
+- A blink means `message`, `context`, `proactive.sent`, or the blink route, tool, and command. Tool calls have no event in dusha, so a harness posts the route itself.
+- `dusha maid ...` runs on the server, so it can't draw. `maid/tui.py` is a separate stdlib client that follows the SSE route, and she sleeps whenever the hub can't be reached.

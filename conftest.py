@@ -30,6 +30,7 @@ PLUGINS = (
     "diary",
     "inbox",
     "focus",
+    "maid",
 )
 
 

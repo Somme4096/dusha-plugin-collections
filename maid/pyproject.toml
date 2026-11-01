@@ -1,0 +1,13 @@
+[project]
+name = "dusha-maid"
+version = "0.1.0"
+description = "The maid in a terminal: she breathes, blinks when something happens, and sleeps"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.uv]
+package = false
+
+[tool.dusha]
+entry = "maid"
+inject = ["api", "cli", "mcp"]
