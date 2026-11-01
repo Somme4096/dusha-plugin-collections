@@ -131,3 +131,13 @@ def test_she_sleeps_when_the_hub_is_gone():
         wait_for(lambda: terminal.since(0, faces(True)), timeout=10)
     finally:
         terminal.leave()
+
+
+def test_a_hub_without_the_plugin_is_an_error_not_a_nap(tmp_path, plugins_dir):
+    config = make_config(tmp_path / "data", plugins_dir, {"proactive": False})
+    with Server(config, free_port()) as server:
+        terminal = Terminal(server.url)
+        terminal.process.wait(5)
+    assert terminal.process.returncode == 1
+    assert b"maid plugin" in terminal.process.stderr.read()
+    wait_for(lambda: b"\x1b[?25h\x1b[?1049l" in terminal.painted)

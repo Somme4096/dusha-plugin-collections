@@ -11,6 +11,7 @@ import signal
 import sys
 import threading
 import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -24,6 +25,7 @@ BREATH_PIXELS = 2
 # Everything above this pixel row sinks on the exhale.
 CHEST_ROW = 78
 EMPTY = "."
+REFUSED = {401: "Check --token.", 404: "Is the maid plugin in that hub's config?"}
 GREYS = {"0": 238, "1": 244, "2": 250, "3": 253, "4": 255}
 
 
@@ -66,6 +68,7 @@ class Link(threading.Thread):
         self.url = url.rstrip("/") + "/state/v1/maid/stream"
         self.token = token
         self.state = {"blinks": 0, "asleep": True}
+        self.problem = ""
 
     def follow(self) -> None:
         request = urllib.request.Request(self.url, headers={"x-companion-token": self.token})
@@ -78,6 +81,9 @@ class Link(threading.Thread):
         while True:
             try:
                 self.follow()
+            except urllib.error.HTTPError as error:
+                self.problem = f"{self.url} answered {error.code}. {REFUSED.get(error.code, '')}".strip()
+                return
             except (OSError, ValueError):
                 pass
             self.state = {**self.state, "asleep": True}
@@ -102,6 +108,8 @@ def main() -> None:
     phase = 0.0
     try:
         while True:
+            if link.problem:
+                sys.exit(link.problem)
             now = time.monotonic()
             asleep, blinks = link.state["asleep"], link.state["blinks"]
             if blinks != seen:
