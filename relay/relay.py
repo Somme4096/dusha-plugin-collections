@@ -123,6 +123,19 @@ class Relay:
             raise ValueError(f"{entry['device']} answered {response.status_code}: {detail}")
         return response.json()
 
+    def endpoint(self, device: str, capability: str) -> dict[str, Any]:
+        try:
+            entry = self.resolve(device, capability)
+        except ValueError as error:
+            return {"error": str(error)}
+        if entry.get("local"):
+            return {"device": device, "local": True}
+        if not entry.get("url"):
+            return {"error": f"{device} did not report a URL to reach it at"}
+        token = self.options.tokens.get(device, self.options.token)
+        headers = {"x-companion-token": token} if token else {}
+        return {"device": device, "url": entry["url"], "headers": headers}
+
     def look(self, device: str = "auto") -> Any:
         if device == "auto":
             device = self.presence().get("active_device") or ""
@@ -255,6 +268,7 @@ def parse_options(raw: dict[str, Any]) -> Options:
 def apply(ctx: Any, config: dict[str, Any]) -> None:
     relay = Relay(ctx, parse_options(config))
     ctx.on("proactive.sent", relay.mirror)
+    ctx.on("relay.endpoint", relay.endpoint)
     ctx.on("context", relay.clock)
     device_arg = option(
         "device", default="auto", help="Device name from presence, or auto for where they are"

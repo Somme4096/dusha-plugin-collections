@@ -22,7 +22,7 @@ PLUGINS = (
     "better_proactive",
     "system_one",
     "everos_memory",
-    "spawn",
+    "acp",
     "music",
     "hands",
     "voice",

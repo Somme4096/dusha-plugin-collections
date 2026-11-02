@@ -83,7 +83,7 @@ def test_spawn_runs_an_agent_on_a_device_and_answers_in_one_call(tmp_path, plugi
                     "url": f"http://127.0.0.1:{port}",
                 },
                 "ambient": {"device": "desktop", "forward_to": {"url": hub.url}, "sample_seconds": 1},
-                "spawn": {
+                "acp": {
                     "agents": {
                         "fake": {"command": [sys.executable, str(script)]},
                         "missing": {"command": ["dusha-test-no-such-agent"]},
@@ -94,7 +94,7 @@ def test_spawn_runs_an_agent_on_a_device_and_answers_in_one_call(tmp_path, plugi
         )
         with Server(device_config, port):
             wait_for(lambda: devices(hub.url).get("desktop"))
-            assert devices(hub.url)["desktop"]["capabilities"] == ["spawn"]
+            assert devices(hub.url)["desktop"]["capabilities"] == ["acp", "spawn"]
 
             error, result = mcp(hub.url, "spawn", prompt="the chores", device="desktop", cwd=str(tmp_path))
             assert not error, result
@@ -117,11 +117,11 @@ def test_spawn_runs_an_agent_on_a_device_and_answers_in_one_call(tmp_path, plugi
 
             # The run shows up in ambient, forwarded to the hub like any other row.
             rows = wait_for(
-                lambda: httpx.get(hub.url + "/state/v1/ambient", params={"source": "spawn"}).json()[
+                lambda: httpx.get(hub.url + "/state/v1/ambient", params={"source": "acp"}).json()[
                     "observations"
                 ]
             )
-            assert any("the chores" in row["text"] and row["device"] == "desktop" for row in rows)
+            assert any("spawn: end_turn" in row["text"] and row["device"] == "desktop" for row in rows)
 
 
 def test_spawn_is_not_offered_without_an_installed_agent(tmp_path, plugins_dir):
@@ -131,7 +131,7 @@ def test_spawn_is_not_offered_without_an_installed_agent(tmp_path, plugins_dir):
         {
             "presence": {"device": "nas", "sensor": "none", "interval_seconds": 30},
             "relay": {},
-            "spawn": {"agents": {"missing": {"command": ["dusha-test-no-such-agent"]}}},
+            "acp": {"agents": {"missing": {"command": ["dusha-test-no-such-agent"]}}},
         },
     )
     with Server(config, free_port()) as hub:

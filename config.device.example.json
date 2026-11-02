@@ -64,14 +64,17 @@
         }
       }
     },
-    "spawn": {
+    "acp": {
       "options": {
         "agents": {
-          "opencode": {
+          "maki": {
             "command": [
-              "opencode",
-              "acp"
-            ]
+              "maki",
+              "--trust",
+              "acp",
+              "--yolo"
+            ],
+            "mode": "build"
           }
         }
       }

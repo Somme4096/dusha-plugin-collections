@@ -15,7 +15,7 @@ A Windows machine runs as a device, like the MacBook. The hub stays on the NAS.
    ```
 
 3. Copy [config.device.example.json](../config.device.example.json) to `%USERPROFILE%\.config\dusha\<name>\config.json`, and set `device`, `plugins_dir`, and the tokens.
-4. Set `plugins.spawn.options.agents` to an agent installed here, or drop `spawn`.
+4. Set `plugins.acp.options.agents` to an agent installed here, or drop `acp`.
 5. Allow the port through the firewall for Tailscale only:
 
    ```powershell
@@ -44,7 +44,7 @@ A Windows machine runs as a device, like the MacBook. The hub stays on the NAS.
 | music | Windows media sessions. No per-player volume. Local songs open in the default player. |
 | hands | `cmd` for `shell`, `SendKeys` for input, process titles for windows. Keys use SendKeys syntax, such as `{ENTER}`. |
 | voice | `Media.SoundPlayer`, so keep `response_format` at `wav`, or set `player`. |
-| spawn | Any ACP agent on `PATH`. |
+| acp | Any ACP agent on `PATH`. |
 
 The journal and container sources stay off.
 

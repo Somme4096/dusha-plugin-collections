@@ -33,6 +33,24 @@
         ]
       }
     },
+    "acp": {
+      "options": {
+        "agents": {
+          "maki": {
+            "command": [
+              "maki",
+              "--trust",
+              "acp",
+              "--yolo"
+            ],
+            "cwd": "~/companion",
+            "mode": "build"
+          }
+        },
+        "home": "nas",
+        "switch_after_minutes": 3
+      }
+    },
     "voice": {
       "options": {
         "base_url": "http://127.0.0.1:8088/v1",
