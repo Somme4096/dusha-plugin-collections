@@ -88,21 +88,7 @@ function useRail(): [boolean, () => void] {
   return [collapsed, toggle];
 }
 
-function Rail({
-  route,
-  theme,
-  toggle,
-  collapsed,
-  toggleRail,
-  openPalette,
-}: {
-  route: Route;
-  theme: string;
-  toggle: () => void;
-  collapsed: boolean;
-  toggleRail: () => void;
-  openPalette: () => void;
-}) {
+function Rail({ route, collapsed, toggleRail }: { route: Route; collapsed: boolean; toggleRail: () => void }) {
   const store = useStore();
   const counts: Record<string, string> = {
     plugins: `${store.plugins.filter((p) => p.state === "active").length}/${store.plugins.length}`,
@@ -140,18 +126,6 @@ function Rail({
           </a>
         ))}
       </nav>
-      <div class="rail-foot">
-        <button class="btn ghost" onClick={openPalette} aria-label="Open the command palette" title="Jump (⌘K)">
-          <Search size={12} /> <span class="rail-word">jump</span> <kbd class="rail-word">⌘K</kbd>
-        </button>
-        <button class="btn ghost" onClick={toggle} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`} title={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}>
-          {theme === "dark" ? <Sun size={12} /> : <Moon size={12} />} <span class="rail-word">{theme === "dark" ? "light" : "dark"}</span>
-        </button>
-        <span class="status server" title={store.meta?.server}>
-          <span class={`dot ${store.online ? "ok live" : "bad"}`} />
-          <span class="rail-word">{store.meta?.server.replace(/^https?:\/\//, "") ?? "…"}</span>
-        </span>
-      </div>
     </aside>
   );
 }
@@ -223,9 +197,8 @@ function Palette({ close }: { close: () => void }) {
   );
 }
 
-function Topbar({ route }: { route: Route }) {
+function Topbar({ route, theme, toggle, openPalette }: { route: Route; theme: string; toggle: () => void; openPalette: () => void }) {
   const store = useStore();
-  const active = store.plugins.filter((plugin) => plugin.state === "active").length;
   return (
     <header class="topbar">
       <div class="crumbs">
@@ -240,15 +213,12 @@ function Topbar({ route }: { route: Route }) {
         )}
       </div>
       <div class="topbar-right">
-        {store.online ? (
-          <span class="status">
-            <span class="dot ok live" /> {active} plugins active · database {store.health?.database ?? "…"}
-          </span>
-        ) : (
-          <span class="status bad-text">
-            <span class="dot bad" /> server unreachable
-          </span>
-        )}
+        <button class="btn ghost" onClick={openPalette} aria-label="Open the command palette" title="Jump (⌘K)">
+          <Search size={12} /> jump <kbd>⌘K</kbd>
+        </button>
+        <button class="btn ghost" onClick={toggle} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`} title={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}>
+          {theme === "dark" ? <Sun size={12} /> : <Moon size={12} />} {theme === "dark" ? "light" : "dark"}
+        </button>
       </div>
     </header>
   );
@@ -310,16 +280,9 @@ function Shell() {
 
   return (
     <div class={`shell${railCollapsed ? " rail-collapsed" : ""}`}>
-      <Rail
-        route={route}
-        theme={theme}
-        toggle={toggle}
-        collapsed={railCollapsed}
-        toggleRail={toggleRail}
-        openPalette={() => setPalette(true)}
-      />
+      <Rail route={route} collapsed={railCollapsed} toggleRail={toggleRail} />
       <main class="main">
-        <Topbar route={route} />
+        <Topbar route={route} theme={theme} toggle={toggle} openPalette={() => setPalette(true)} />
         <Offline />
         <Page key={route.page} route={route} />
       </main>
