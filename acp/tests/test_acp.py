@@ -184,3 +184,25 @@ def test_a_crashed_agent_is_reported_and_respawned(tmp_path, plugins_dir):
         assert turn(hub.url, "crash now")[-1]["event"] == "error"
         assert turn(hub.url, "hello")[-1]["text"] == "echo: hello"
         assert len({row["pid"] for row in records(tmp_path / "nas" / "agent.jsonl", "prompt")}) == 2
+
+
+def test_a_throwaway_session_has_no_route_for_proactive_messages(tmp_path, plugins_dir):
+    config = make_config(tmp_path / "hub", plugins_dir, hub_config(tmp_path))
+    with Server(config, free_port()) as hub:
+        wait_for(
+            lambda: "spawn" in httpx.get(hub.url + "/state/v1/presence").json()["devices"][0]["capabilities"]
+        )
+        reply = httpx.post(
+            hub.url + "/mcp",
+            json={
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "tools/call",
+                "params": {"name": "spawn", "arguments": {"prompt": "chores", "device": "nas"}},
+            },
+            timeout=30,
+        )
+        assert not reply.json()["result"].get("isError"), reply.json()
+        [prompt] = records(tmp_path / "nas" / "agent.jsonl", "prompt")
+        assert prompt["env"]["DUSHA_CONVERSATION_ID"].startswith("spawn-")
+        assert (prompt["env"]["DUSHA_ROUTE"], prompt["env"]["DUSHA_HARNESS"]) == ("-", "spawn")

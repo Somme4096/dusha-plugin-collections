@@ -36,6 +36,7 @@ UP_STATES = ("active", "idle", "awake")
 OPERATIONS = ("cancel", "reset", "config", "sessions", "resume")
 LOG_SIZE = 500
 SWITCH_TTL_SECONDS = 15 * 60
+NO_ROUTE = "-"
 
 
 class Target(BaseModel):
@@ -335,8 +336,8 @@ class Sessions:
             env = {
                 **chosen.env,
                 "DUSHA_CONVERSATION_ID": conversation,
-                "DUSHA_ROUTE": target.route,
-                "DUSHA_HARNESS": target.harness,
+                "DUSHA_ROUTE": target.route or NO_ROUTE,
+                "DUSHA_HARNESS": target.harness or "acp",
             }
             client = Client(chosen.command, folder, env)
             try:
@@ -539,7 +540,7 @@ class Sessions:
 
     def run(self, prompt: str, agent: str = "", cwd: str = "", timeout_seconds: float = 0) -> dict[str, Any]:
         name = agent or self.options.default
-        target = Target(conversation_id=f"spawn-{uuid.uuid4().hex[:12]}")
+        target = Target(conversation_id=f"spawn-{uuid.uuid4().hex[:12]}", route=NO_ROUTE, harness="spawn")
         started = time.monotonic()
         deadline = started + (timeout_seconds or self.options.timeout_seconds)
         try:
