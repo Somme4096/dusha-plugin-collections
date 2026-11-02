@@ -82,6 +82,7 @@ class Options:
     home: str = ""
     switch_after_minutes: float = 3
     check_seconds: float = 30
+    startup_grace_seconds: float = 120
 
 
 def parse_options(raw: dict[str, Any]) -> Options:
@@ -624,6 +625,7 @@ class Executor:
         self.state = self._load()
         self.running: dict[str, str] = {}
         self.switches: list[dict[str, Any]] = []
+        self.started = time.monotonic()
 
     def presence(self) -> dict[str, Any] | None:
         answers = list(self.ctx.collect("presence").values())
@@ -650,6 +652,10 @@ class Executor:
         pinned = self.state["pinned"]
         if pinned != "auto":
             return pinned if ready(pinned) else home
+        current = self.state["device"]
+        waiting = time.monotonic() - self.started < self.options.startup_grace_seconds
+        if waiting and current and current != self.local() and current not in devices:
+            return current
         active = snapshot.get("active_device")
         if active and ready(active):
             since = devices[active].get("since")

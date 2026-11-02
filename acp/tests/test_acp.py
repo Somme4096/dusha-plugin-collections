@@ -206,3 +206,27 @@ def test_a_throwaway_session_has_no_route_for_proactive_messages(tmp_path, plugi
         [prompt] = records(tmp_path / "nas" / "agent.jsonl", "prompt")
         assert prompt["env"]["DUSHA_CONVERSATION_ID"].startswith("spawn-")
         assert (prompt["env"]["DUSHA_ROUTE"], prompt["env"]["DUSHA_HARNESS"]) == ("-", "spawn")
+
+
+def test_a_restarted_hub_keeps_the_device_until_presence_hears_from_it(tmp_path, plugins_dir):
+    port = free_port()
+    for grace in (60, 1):
+        config = make_config(
+            tmp_path / f"hub-{grace}",
+            plugins_dir,
+            hub_config(tmp_path, switch_after_minutes=0, startup_grace_seconds=grace),
+        )
+        with Server(config, free_port()) as hub:
+            beat(hub.url, f"http://127.0.0.1:{port}")
+            assert httpx.get(hub.url + "/state/v1/acp/executor").json()["device"] == "macbook"
+        with Server(config, free_port()) as hub:
+            where = httpx.get(hub.url + "/state/v1/acp/executor").json()
+            assert (where["device"], where["switches"]) == ("macbook", [])
+            if grace == 60:
+                beat(hub.url, f"http://127.0.0.1:{port}")
+                assert httpx.get(hub.url + "/state/v1/acp/executor").json()["switches"] == []
+            else:
+                time.sleep(1.1)
+                where = httpx.get(hub.url + "/state/v1/acp/executor").json()
+                assert where["device"] == "nas"
+                assert [(item["old"], item["new"]) for item in where["switches"]] == [("macbook", "nas")]
