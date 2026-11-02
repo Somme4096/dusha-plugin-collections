@@ -258,7 +258,7 @@ textarea {
 .nav {
   display: flex;
   flex-direction: column;
-  margin: 0 -8px;
+  margin: 0 -8px 0 10px;
 }
 
 .nav a {
