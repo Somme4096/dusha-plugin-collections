@@ -218,8 +218,7 @@ textarea {
   }
 
   .rail-collapsed .rail-word,
-  .rail-collapsed .count,
-  .rail-collapsed .nav-label {
+  .rail-collapsed .count {
     display: none;
   }
 
@@ -258,7 +257,7 @@ textarea {
 .nav {
   display: flex;
   flex-direction: column;
-  margin: 0 -8px 0 10px;
+  margin: 23px -8px 0 10px;
 }
 
 .nav a {
@@ -295,12 +294,6 @@ textarea {
 .nav .count {
   color: var(--fg-3);
   font-size: 11px;
-}
-
-.nav-label {
-  color: var(--fg-3);
-  font-size: 11px;
-  padding: 0 8px 6px;
 }
 
 .main {
@@ -1663,8 +1656,7 @@ select.input {
     width: 100%;
   }
 
-  .nav a .count,
-  .nav-label {
+  .nav a .count {
     display: none;
   }
 

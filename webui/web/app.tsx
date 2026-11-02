@@ -115,7 +115,6 @@ function Rail({ route, collapsed, toggleRail }: { route: Route; collapsed: boole
         </button>
       </div>
       <nav class="nav" aria-label="Sections">
-        <span class="nav-label rail-word">companion</span>
         {PAGES.map(({ page, label, short }) => (
           <a key={page} href={`#/${page}`} aria-label={label} aria-current={route.page === page ? "page" : undefined} title={label}>
             <span class="rail-word">{label}</span>
